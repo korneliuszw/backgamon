@@ -15,7 +15,7 @@ typedef struct {
 } BoardPoint;
 
 
-typedef struct {
+typedef struct Board {
     BoardPoint points[BOARD_POINTS];
     BoardPoint bars[PLAYERS];
 } Board;

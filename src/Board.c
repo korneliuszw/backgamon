@@ -44,9 +44,9 @@ int *rollDice(int *movesNumber) {
 
 bool canMovePiece(Board *board, int player, int from, int to) {
     if (from < 0 || from >= BOARD_POINTS || to < 0 || to >= BOARD_POINTS) return false;
-    else if (board->bars[player - 1].pieces > 0 && from != player == PLAYER_RED ? 0 : BOARD_POINTS - 1) return false;
-    else if (player == PLAYER_RED && from > to) return false; // clockwise movement only
-    else if (player == PLAYER_WHITE && from < to) return false; // counter-clockwise movement only
+    else if (board->bars[player - 1].pieces > 0 && from != (player == PLAYER_RED ? 0 : BOARD_POINTS - 1)) return false;
+    else if (player == PLAYER_RED && from < to) return false; // clockwise movement only
+    else if (player == PLAYER_WHITE && from > to) return false; // counter-clockwise movement only
     else if (board->points[from].pieces == 0) return false;
     else if (board->points[from].player != player) return false;
     else if (board->points[to].pieces > 1 && board->points[to].player != player) return false;
@@ -66,6 +66,7 @@ bool movePiece(Board *board, int player, int from, int to) {
     return true;
 }
 
+
 int winner(Board *board) {
     if (areAllPiecesHome(board, PLAYER_RED)) return PLAYER_RED;
     if (areAllPiecesHome(board, PLAYER_WHITE)) return PLAYER_WHITE;
@@ -77,18 +78,18 @@ void seedPoint(Board *board, int player, int point, int pieces) {
     board->points[point].pieces = pieces;
 }
 
-void seedRedPlayer(Board *board) {
-    seedPoint(board, PLAYER_RED, 0, 2);
-    seedPoint(board, PLAYER_RED, 11, 5);
-    seedPoint(board, PLAYER_RED, 16, 3);
-    seedPoint(board, PLAYER_RED, 18, 5);
+void seedWhitePlayer(Board *board) {
+    seedPoint(board, PLAYER_WHITE, 0, 2);
+    seedPoint(board, PLAYER_WHITE, 11, 5);
+    seedPoint(board, PLAYER_WHITE, 16, 3);
+    seedPoint(board, PLAYER_WHITE, 18, 5);
 }
 
-void seedWhitePlayer(Board *board) {
-    seedPoint(board, PLAYER_WHITE, 5, 5);
-    seedPoint(board, PLAYER_WHITE, 7, 3);
-    seedPoint(board, PLAYER_WHITE, 12, 5);
-    seedPoint(board, PLAYER_WHITE, 23, 2);
+void seedRedPlayer(Board *board) {
+    seedPoint(board, PLAYER_RED, 5, 5);
+    seedPoint(board, PLAYER_RED, 7, 3);
+    seedPoint(board, PLAYER_RED, 12, 5);
+    seedPoint(board, PLAYER_RED, 23, 2);
 }
 
 Board *boardInit() {
