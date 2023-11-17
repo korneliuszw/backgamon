@@ -18,6 +18,7 @@ typedef struct {
 typedef struct Board {
     BoardPoint points[BOARD_POINTS];
     BoardPoint bars[PLAYERS];
+    int remainingPieces[PLAYERS];
 } Board;
 
 int getPlayerBoardStart(int player);
@@ -34,9 +35,11 @@ int *rollDice(int *moves);
 
 bool movePiece(Board *board, int player, int from, int to);
 
-bool movePieceOut(Board *board, int player, int from);
+void movePieceOut(Board *board, int player);
 
 bool canMovePiece(Board *board, int player, int from, int to);
+
+bool canMoveToDestination(Board *board, int player, int to);
 
 Board *boardInit();
 

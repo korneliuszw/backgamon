@@ -9,7 +9,7 @@
 #include <State.h>
 
 
-#define MOVE_STEP(player) ((player) == (PLAYER_WHITE) ? (1) : (-1))
+#define MOVE_STEP(player) ((player) == (PLAYER_WHITE) ? (-1) : (1))
 
 bool isValidMove(GameState *gameState, int i) {
     return gameState->availableMoves.availableMoves[i].to != gameState->availableMoves.availableMoves[i].from;
@@ -51,11 +51,22 @@ void getMoves(GameState *gameState, Board *board) {
     if (moves->availableMoves != NULL) free(moves->availableMoves);
     gameState->selectedPiece = -1;
     moves->availableMoves = calloc(sizeof(int), BOARD_POINTS);
-    int currentMove = gameState->moves[gameState->moveNumber];
+    moves->movesCount = 0;
+    int currentMove = gameState->moves[gameState->moveNumber] * MOVE_STEP(gameState->player);
+    if (board->bars[gameState->player - 1].pieces > 0) {
+        // enemy base
+        int from = gameState->player == PLAYER_RED ? -1 : BOARD_POINTS;
+        if (canMoveToDestination(board, gameState->player, from + currentMove)) {
+            moves->availableMoves[0].from = from;
+            moves->availableMoves[0].to = currentMove;
+            moves->movesCount = 1;
+        }
+        return;
+    }
     for (int i = 0; i < BOARD_POINTS - currentMove; i++) {
         BoardPoint *boardPoint = &board->points[i];
         if (gameState->player == boardPoint->player &&
-            canMovePiece(board, boardPoint->player, i, i + (currentMove * MOVE_STEP(boardPoint->player)))) {
+            canMovePiece(board, gameState->player, i, i + currentMove)) {
             if (gameState->selectedPiece == -1) {
                 gameState->selectedPiece = i;
             }

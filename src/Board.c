@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b)
+
 int getPlayerBoardStart(int player) {
     if (player == PLAYER_RED) return 0;
     return 18;
@@ -42,25 +44,38 @@ int *rollDice(int *movesNumber) {
     return moves;
 }
 
-bool canMovePiece(Board *board, int player, int from, int to) {
-    if (from < 0 || from >= BOARD_POINTS || to < 0 || to >= BOARD_POINTS) return false;
-    else if (board->bars[player - 1].pieces > 0 && from != (player == PLAYER_RED ? 0 : BOARD_POINTS - 1)) return false;
-    else if (player == PLAYER_RED && from < to) return false; // clockwise movement only
-    else if (player == PLAYER_WHITE && from > to) return false; // counter-clockwise movement only
-    else if (board->points[from].pieces == 0) return false;
-    else if (board->points[from].player != player) return false;
+bool canMoveToDestination(Board *board, int player, int to) {
+    if (to == (player == PLAYER_RED ? BOARD_POINTS : -1)) return areAllPiecesHome(board, player);
+    else if (to < 0 || to >= BOARD_POINTS) return false;
     else if (board->points[to].pieces > 1 && board->points[to].player != player) return false;
     return true;
 }
 
+bool canMovePiece(Board *board, int player, int from, int to) {
+    if (from < 0 || from >= BOARD_POINTS) return false;
+    else if (board->bars[player - 1].pieces > 0 && from != (player == PLAYER_RED ? 0 : BOARD_POINTS - 1)) return false;
+    else if (player == PLAYER_RED && from > to) return false; // clockwise movement only
+    else if (player == PLAYER_WHITE && from < to) return false; // counter-clockwise movement only
+    else if (board->points[from].pieces == 0) return false;
+    else if (board->points[from].player != player) return false;
+    return canMoveToDestination(board, player, to);
+}
+
+void movePieceOut(Board *board, int player) {
+    if (board->remainingPieces[player - 1] == 1) {
+        winner(board);
+    } else board->remainingPieces[player - 1]--;
+}
+
 bool movePiece(Board *board, int player, int from, int to) {
+    if (to == (player == PLAYER_RED ? BOARD_POINTS : -1)) movePieceOut(board, player);
     if (board->points[from].player != player) return false;
     if (board->points[to].player != player) {
         if (board->points[to].pieces > 1) return false;
         board->points[to].pieces = 0;
         board->bars[board->points[to].player - 1].pieces++;
     }
-    board->points[from].pieces--;
+    board->points[from].pieces = MAX(0, board->points[from].pieces - 1));
     board->points[to].pieces++;
     board->points[to].player = player;
     return true;
@@ -68,8 +83,6 @@ bool movePiece(Board *board, int player, int from, int to) {
 
 
 int winner(Board *board) {
-    if (areAllPiecesHome(board, PLAYER_RED)) return PLAYER_RED;
-    if (areAllPiecesHome(board, PLAYER_WHITE)) return PLAYER_WHITE;
     return 0;
 }
 
@@ -83,6 +96,7 @@ void seedWhitePlayer(Board *board) {
     seedPoint(board, PLAYER_WHITE, 11, 5);
     seedPoint(board, PLAYER_WHITE, 16, 3);
     seedPoint(board, PLAYER_WHITE, 18, 5);
+    board->remainingPieces[PLAYER_WHITE - 1] = 15;
 }
 
 void seedRedPlayer(Board *board) {
@@ -90,6 +104,7 @@ void seedRedPlayer(Board *board) {
     seedPoint(board, PLAYER_RED, 7, 3);
     seedPoint(board, PLAYER_RED, 12, 5);
     seedPoint(board, PLAYER_RED, 23, 2);
+    board->remainingPieces[PLAYER_RED - 1] = 15;
 }
 
 Board *boardInit() {
