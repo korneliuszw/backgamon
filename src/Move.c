@@ -9,18 +9,19 @@
 #include <State.h>
 
 
-#define MOVE_STEP(player) ((player) == (PLAYER_WHITE) ? (-1) : (1))
+#define MOVE_STEP(player) ((player) == (PLAYER_RED) ? (-1) : (1))
 
-bool isValidMove(GameState *gameState, int i) {
-    return gameState->availableMoves.availableMoves[i].to != gameState->availableMoves.availableMoves[i].from;
+bool isValidMove(GameState *gameState, Board *board, int i) {
+    return gameState->availableMoves.availableMoves[i].to != gameState->availableMoves.availableMoves[i].from &&
+           board->points[i].player == gameState->player;
 }
 
 void selectPiece(GameState *gameState, Board *board, int direction) {
-    if (gameState->selectedPiece == -1) return;
+    if (gameState->selectedPiece < 0) return;
     else if (direction == DIRECTION_DOWN) {
         for (int i = gameState->selectedPiece - 1; i >= 0; i--) {
             // only when 0 = 0 so this element is not an initialized move
-            if (isValidMove(gameState, i)) {
+            if (isValidMove(gameState, board, i)) {
                 gameState->selectedPiece = i;
                 gameState->update = true;
                 return;
@@ -30,7 +31,7 @@ void selectPiece(GameState *gameState, Board *board, int direction) {
         for (int i = gameState->selectedPiece + 1; i < BOARD_POINTS; i++) {
             // FIXME: NASTY code duplication
             // only when 0 = 0 so this element is not an initialized move
-            if (isValidMove(gameState, i)) {
+            if (isValidMove(gameState, board, i)) {
                 gameState->selectedPiece = i;
                 gameState->update = true;
                 return;
@@ -55,15 +56,16 @@ void getMoves(GameState *gameState, Board *board) {
     int currentMove = gameState->moves[gameState->moveNumber] * MOVE_STEP(gameState->player);
     if (board->bars[gameState->player - 1].pieces > 0) {
         // enemy base
-        int from = gameState->player == PLAYER_RED ? -1 : BOARD_POINTS;
+        gameState->selectedPiece = gameState->player == PLAYER_RED ? BOARD_POINTS - 1 : 0;
+        int from = gameState->player == PLAYER_RED ? BOARD_POINTS : -1;
         if (canMoveToDestination(board, gameState->player, from + currentMove)) {
-            moves->availableMoves[0].from = from;
-            moves->availableMoves[0].to = currentMove;
+            moves->availableMoves[gameState->selectedPiece].from = from;
+            moves->availableMoves[gameState->selectedPiece].to = from + currentMove;
             moves->movesCount = 1;
         }
         return;
     }
-    for (int i = 0; i < BOARD_POINTS - currentMove; i++) {
+    for (int i = 0; i < BOARD_POINTS; i++) {
         BoardPoint *boardPoint = &board->points[i];
         if (gameState->player == boardPoint->player &&
             canMovePiece(board, gameState->player, i, i + currentMove)) {
@@ -74,5 +76,8 @@ void getMoves(GameState *gameState, Board *board) {
             moves->availableMoves[i].to = i + currentMove;
             moves->movesCount += 1;
         }
+    }
+    if (moves->movesCount == 0) {
+        transitionState(gameState, board);
     }
 }

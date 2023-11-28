@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
 #define MAX(a, b) ((a) > (b) ? (a) : (b)
 
 int getPlayerBoardStart(int player) {
@@ -18,7 +19,7 @@ bool areAllPiecesHome(Board *board, int player) {
     int end = getPlayerBoardEnd(player);
     int start = getPlayerBoardStart(player);
     for (int i = 0; i < BOARD_POINTS; i++) {
-        if (board->points[i].player == player && (i < start || i > end)) {
+        if (board->points[i].pieces > 0 && board->points[i].player == player && (i < start || i > end)) {
             return false;
         }
     }
@@ -37,6 +38,10 @@ int *rollDice(int *movesNumber) {
     moves[1] = throw_dice();
     if (moves[0] == moves[1]) {
         moves = realloc(moves, sizeof(int) * 4);
+        if (moves == NULL) {
+            *movesNumber = 0;
+            return NULL;
+        }
         moves[2] = moves[0];
         moves[3] = moves[0];
         *movesNumber = 4;
@@ -45,7 +50,7 @@ int *rollDice(int *movesNumber) {
 }
 
 bool canMoveToDestination(Board *board, int player, int to) {
-    if (to == (player == PLAYER_RED ? BOARD_POINTS : -1)) return areAllPiecesHome(board, player);
+    if (to == (player == PLAYER_RED ? -1 : BOARD_POINTS)) return areAllPiecesHome(board, player);
     else if (to < 0 || to >= BOARD_POINTS) return false;
     else if (board->points[to].pieces > 1 && board->points[to].player != player) return false;
     return true;
@@ -54,8 +59,8 @@ bool canMoveToDestination(Board *board, int player, int to) {
 bool canMovePiece(Board *board, int player, int from, int to) {
     if (from < 0 || from >= BOARD_POINTS) return false;
     else if (board->bars[player - 1].pieces > 0 && from != (player == PLAYER_RED ? 0 : BOARD_POINTS - 1)) return false;
-    else if (player == PLAYER_RED && from > to) return false; // clockwise movement only
-    else if (player == PLAYER_WHITE && from < to) return false; // counter-clockwise movement only
+    else if (player == PLAYER_RED && from < to) return false; // clockwise movement only
+    else if (player == PLAYER_WHITE && from > to) return false; // counter-clockwise movement only
     else if (board->points[from].pieces == 0) return false;
     else if (board->points[from].player != player) return false;
     return canMoveToDestination(board, player, to);
@@ -63,15 +68,13 @@ bool canMovePiece(Board *board, int player, int from, int to) {
 
 void movePieceOut(Board *board, int player) {
     if (board->remainingPieces[player - 1] == 1) {
-        winner(board);
+        winner(board, player);
     } else board->remainingPieces[player - 1]--;
 }
 
 bool movePiece(Board *board, int player, int from, int to) {
     if (to == (player == PLAYER_RED ? BOARD_POINTS : -1)) movePieceOut(board, player);
-    if (board->points[from].player != player) return false;
     if (board->points[to].player != player) {
-        if (board->points[to].pieces > 1) return false;
         board->points[to].pieces = 0;
         board->bars[board->points[to].player - 1].pieces++;
     }
@@ -82,8 +85,8 @@ bool movePiece(Board *board, int player, int from, int to) {
 }
 
 
-int winner(Board *board) {
-    return 0;
+void winner(Board *board, int player) {
+    board->winner = player;
 }
 
 void seedPoint(Board *board, int player, int point, int pieces) {
@@ -97,6 +100,8 @@ void seedWhitePlayer(Board *board) {
     seedPoint(board, PLAYER_WHITE, 16, 3);
     seedPoint(board, PLAYER_WHITE, 18, 5);
     board->remainingPieces[PLAYER_WHITE - 1] = 15;
+    board->bars[PLAYER_WHITE - 1].pieces = 0;
+    board->bars[PLAYER_WHITE - 1].player = PLAYER_WHITE;
 }
 
 void seedRedPlayer(Board *board) {
@@ -105,11 +110,14 @@ void seedRedPlayer(Board *board) {
     seedPoint(board, PLAYER_RED, 12, 5);
     seedPoint(board, PLAYER_RED, 23, 2);
     board->remainingPieces[PLAYER_RED - 1] = 15;
+    board->bars[PLAYER_RED - 1].pieces = 0;
+    board->bars[PLAYER_RED - 1].player = PLAYER_RED;
 }
 
 Board *boardInit() {
     sranddev();
     Board *board = malloc(sizeof(Board));
+    board->winner = 0;
     for (int i = 0; i < BOARD_POINTS; i++) {
         board->points[i].pieces = 0;
         board->points[i].player = 0;

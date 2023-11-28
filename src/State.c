@@ -24,9 +24,10 @@ void transitionDiceRoll(GameState *gameState, Board *board) {
 }
 
 void transitionMove(GameState *gameState, Board *board) {
-    movePiece(board, gameState->player,
-              gameState->availableMoves.availableMoves[gameState->selectedPiece].from,
-              gameState->availableMoves.availableMoves[gameState->selectedPiece].to);
+    if (gameState->availableMoves.movesCount > 0)
+        movePiece(board, gameState->player,
+                  GET_MOVE_FROM_SELECTED_PIECE(gameState).from,
+                  GET_MOVE_FROM_SELECTED_PIECE(gameState).to);
     gameState->update = true;
     gameState->moveNumber++;
     if (gameState->moveNumber < gameState->movesCount) {
@@ -65,7 +66,6 @@ GameState *gameStateInit() {
     gameState->moves = NULL;
     gameState->movesCount = 0;
     gameState->moveNumber = 0;
-    gameState->selectedMove = 0;
     gameState->selectedPiece = -1;
     gameState->update = false;
     return gameState;

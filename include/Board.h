@@ -7,6 +7,7 @@
 #define PLAYERS 2
 #define PLAYER_RED 1
 #define PLAYER_WHITE 2
+#define BAR_POINT 36
 
 
 typedef struct {
@@ -19,6 +20,7 @@ typedef struct Board {
     BoardPoint points[BOARD_POINTS];
     BoardPoint bars[PLAYERS];
     int remainingPieces[PLAYERS];
+    int winner;
 } Board;
 
 int getPlayerBoardStart(int player);
@@ -43,6 +45,6 @@ bool canMoveToDestination(Board *board, int player, int to);
 
 Board *boardInit();
 
-int winner(Board *board);
+void winner(Board *board, int player);
 
 #endif //BAKAGAMON_BOARD_H

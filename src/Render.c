@@ -102,7 +102,7 @@ void drawPoint(Context *context, int point, int x, int y) {
     int targetColor = boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_TARGET)
                                                       : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_TARGET);
     if (context->gameState->availableMoves.movesCount > 0 &&
-        context->gameState->availableMoves.availableMoves[context->gameState->selectedPiece].to == point) {
+        GET_MOVE_FROM_SELECTED_PIECE(context->gameState).to == point) {
         wattron(context->boardWindowInfo->handle, targetColor);
     }
     for (; i < 6; i++) {
