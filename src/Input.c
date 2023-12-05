@@ -26,10 +26,12 @@ void handleInput(Context *context) {
             }
             case 'b': {
                 history_back(&context->gameState->history, context->board, context->gameState);
+                transitionState(context->gameState, context->board);
                 break;
             }
             case 'n': {
                 history_forward(&context->gameState->history, context->board, context->gameState);
+                transitionState(context->gameState, context->board);
                 break;
             }
             case 'q': {

@@ -54,6 +54,10 @@ void transitionState(GameState *gameState, Board *board) {
             transitionDiceRoll(gameState, board);
             gameState->state = SELECTING_MOVE;
             break;
+        case RESTORED_STATE:
+            getMoves(gameState, board);
+            gameState->state = SELECTING_MOVE;
+            break;
         case SELECTING_MOVE:
             transitionMove(gameState, board);
             break;

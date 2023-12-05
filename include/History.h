@@ -20,6 +20,7 @@ typedef struct History {
     BoardPoint *newToPoint;
     BoardPoint *prevFromPoint;
     BoardPoint *prevToPoint;
+    int player;
     struct History *next;
     struct History *prev;
 } History;

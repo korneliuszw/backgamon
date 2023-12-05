@@ -20,6 +20,7 @@ typedef struct History History;
 enum State {
     PICKING_PLAYER,
     ROLLING_DICE,
+    RESTORED_STATE,
     SELECTING_MOVE,
 };
 

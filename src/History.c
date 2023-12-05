@@ -33,6 +33,7 @@ void start_history_entry(History **history, Board *board, Move *move, Dice *dice
     newHistory->prev = *history;
     (*history)->next = newHistory;
     newHistory->next = NULL;
+    newHistory->player = board->points[move->from].player;
     memcpy(newHistory->dice, dice, sizeof(Dice));
     memcpy(newHistory->prevFromPoint, board->points + move->from, sizeof(BoardPoint));
     memcpy(newHistory->prevToPoint, board->points + move->to, sizeof(BoardPoint));
@@ -49,10 +50,10 @@ void commit_history_entry(History *history, Board *board, Move *move) {
 
 
 void history_update(History *history, Board *board, GameState *gameState) {
-    if (gameState->dice != NULL) free(gameState->dice);
-    memcpy(gameState->dice, history->dice, sizeof(Dice));
-    gameState->state = SELECTING_MOVE;
-    transitionState(gameState, board);
+    if (history->dice)
+        memcpy(gameState->dice, history->dice, sizeof(Dice));
+    gameState->player = history->player;
+    gameState->state = RESTORED_STATE;
 }
 
 void history_back(History **history, Board *board, GameState *gameState) {
@@ -61,7 +62,7 @@ void history_back(History **history, Board *board, GameState *gameState) {
     *history = historyItem->prev;
     board->points[historyItem->move->from] = *historyItem->prevFromPoint;
     board->points[historyItem->move->to] = *historyItem->prevToPoint;
-    history_update(*history, board, gameState);
+    history_update(historyItem, board, gameState);
 }
 
 void history_forward(History **history, Board *board, GameState *gameState) {
