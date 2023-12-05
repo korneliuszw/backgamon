@@ -61,7 +61,8 @@ void drawBorders(Context *context) {
 }
 
 void printHelp(Context *context) {
-    mvwprintw(context->windowInfo->handle, context->windowInfo->height - 3, 10, "P) Play L) Load S) Save Q) Quit");
+    mvwprintw(context->windowInfo->handle, context->windowInfo->height - 3, 10,
+              "P) Play L) Load S) Save Q) Quit B) Previous move N) Next move");
     context->windowInfo->update = true;
 }
 
@@ -148,9 +149,9 @@ void drawDice(Context *context) {
                 context->gameState->player == PLAYER_WHITE ? "White" : "Red");
     }
     if (context->gameState->state > ROLLING_DICE) {
-        for (int i = 0; i < context->gameState->movesCount; i++) {
+        for (int i = 0; i < context->gameState->dice->rollsCount; i++) {
             wprintw(context->statusWindowInfo->handle, "%d ",
-                    context->gameState->moves[i]);
+                    context->gameState->dice->rolls[i]);
         }
     }
     wrefresh(context->statusWindowInfo->handle);

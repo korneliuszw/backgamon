@@ -53,7 +53,7 @@ void getMoves(GameState *gameState, Board *board) {
     gameState->selectedPiece = -1;
     moves->availableMoves = calloc(sizeof(int), BOARD_POINTS);
     moves->movesCount = 0;
-    int currentMove = gameState->moves[gameState->moveNumber] * MOVE_STEP(gameState->player);
+    int currentMove = getCurrentRoll(gameState) * MOVE_STEP(gameState->player);
     if (board->bars[gameState->player - 1].pieces > 0) {
         // enemy base
         gameState->selectedPiece = gameState->player == PLAYER_RED ? BOARD_POINTS - 1 : 0;

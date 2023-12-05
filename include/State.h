@@ -15,6 +15,7 @@
     gameState->availableMoves.availableMoves[gameState->selectedPiece == SELECTED_BAR ? 0 : gameState->selectedPiece]
 
 typedef struct Board Board;
+typedef struct History History;
 
 enum State {
     PICKING_PLAYER,
@@ -22,20 +23,27 @@ enum State {
     SELECTING_MOVE,
 };
 
+typedef struct Dice {
+    int *rolls;
+    int rollsCount;
+    int currentRoll;
+} Dice;
+
 typedef struct GameState {
     enum State state;
     int player;
     int selectedPiece;
     bool update;
     int sleep;
-    int *moves;
-    int movesCount;
-    int moveNumber;
+    Dice *dice;
     Moves availableMoves;
+    History *history;
 } GameState;
 
 
 void transitionState(GameState *gameState, Board *board);
+
+int getCurrentRoll(GameState *gameState);
 
 GameState *gameStateInit();
 

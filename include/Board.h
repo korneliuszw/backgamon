@@ -10,7 +10,7 @@
 #define BAR_POINT 36
 
 
-typedef struct {
+typedef struct BoardPoint {
     int pieces;
     int player;
 } BoardPoint;

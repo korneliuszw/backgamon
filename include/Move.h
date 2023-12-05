@@ -11,7 +11,7 @@
 typedef struct GameState GameState;
 typedef struct Board Board;
 
-typedef struct {
+typedef struct Move {
     int from;
     int to;
 } Move;

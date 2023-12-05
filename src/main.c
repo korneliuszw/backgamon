@@ -15,7 +15,6 @@
 int main() {
     Context *context = contextInit();
     drawBoard(context);
-
     while (true) {
         handleInput(context);
         if (context->gameState->update) {

@@ -7,6 +7,7 @@
 
 #include <Board.h>
 #include <State.h>
+#include <History.h>
 #include <ncurses.h>
 
 typedef struct {
