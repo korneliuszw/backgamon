@@ -10,6 +10,10 @@
 #include <History.h>
 #include <ncurses.h>
 
+#define USE_COLOR(cond, color, win) \
+    for (bool breaker = true; breaker; (cond) && wattroff(win,color)) \
+        for (cond && wattron(win,color); breaker; breaker = false)
+
 typedef struct {
     WINDOW *handle;
     int width;

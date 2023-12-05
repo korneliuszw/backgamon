@@ -82,24 +82,19 @@ void drawPoint(Context *context, int point, int x, int y) {
     char *emptyChecker = point % 2 ? "^^^" : ":::";
     int color =
             boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER) : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER);
-    wattron(context->boardWindowInfo->handle, color);
     int step = point > 11 ? 1 : -1;
     int i = 0;
-    mvwprintw(context->boardWindowInfo->handle, y += (i * step), x, "|=|");
-    for (; i < boardPoint.pieces; i++) {
-        if (i == boardPoint.pieces - 1 && context->gameState->selectedPiece == point) {
-            wattron(context->boardWindowInfo->handle,
-                    boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_SELECTED)
-                                                    : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_SELECTED));
+    USE_COLOR(true, color, context->boardWindowInfo->handle) {
+            mvwprintw(context->boardWindowInfo->handle, y += (i * step), x, "|=|");
+            for (; i < boardPoint.pieces; i++) {
+                USE_COLOR(i == boardPoint.pieces - 1 && context->gameState->selectedPiece == point,
+                          boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_SELECTED)
+                                                          : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_SELECTED),
+                          context->boardWindowInfo->handle) {
+                        mvwprintw(context->boardWindowInfo->handle, y + (i * step), x, "|=|");
+                    }
+            }
         }
-        mvwprintw(context->boardWindowInfo->handle, y + (i * step), x, "|=|");
-        if (i == boardPoint.pieces - 1 && context->gameState->selectedPiece == point) {
-            wattroff(context->boardWindowInfo->handle,
-                     boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_SELECTED)
-                                                     : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_SELECTED));
-        }
-    }
-    wattroff(context->boardWindowInfo->handle, color);
     int targetColor = boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_TARGET)
                                                       : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_TARGET);
     if (context->gameState->availableMoves.movesCount > 0 &&
@@ -137,6 +132,7 @@ void drawBoard(Context *context) {
     context->boardWindowInfo->update = true;
 }
 
+
 void drawDice(Context *context) {
     wclear(context->statusWindowInfo->handle);
     if (context->gameState->state == ROLLING_DICE || context->gameState->state == PICKING_PLAYER) {
@@ -150,8 +146,12 @@ void drawDice(Context *context) {
     }
     if (context->gameState->state > ROLLING_DICE) {
         for (int i = 0; i < context->gameState->dice->rollsCount; i++) {
-            wprintw(context->statusWindowInfo->handle, "%d ",
-                    context->gameState->dice->rolls[i]);
+            USE_COLOR(i == context->gameState->dice->currentRoll, COLOR_PAIR_RED_PLAYER_SELECTED,
+                      context->statusWindowInfo->handle) {
+                    if (i == context->gameState->dice->currentRoll) waddch(context->statusWindowInfo->handle, 'c');
+                    wprintw(context->statusWindowInfo->handle, "%d ",
+                            context->gameState->dice->rolls[i]);
+                }
         }
     }
     wrefresh(context->statusWindowInfo->handle);
