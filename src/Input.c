@@ -8,35 +8,57 @@
 
 #include <Move.h>
 #include <History.h>
+#include <Leaderboard.h>
 
 #define KEY_ENTER_KEYBOARD 13
+
+void handleLeaderboardInput(int key, Context *context) {
+    switch (key) {
+        case KEY_UP:
+        case KEY_DOWN: {
+            return moveLeaderboardCursor(context, key == KEY_UP ? -1 : 1);
+        }
+        case KEY_ENTER_KEYBOARD:
+        case 'q':
+        case 't': {
+            return toggleLeaderboard(context);
+        }
+    }
+}
+
+void handleMainWindowInput(int key, Context *context) {
+    switch (key) {
+        case KEY_ENTER_KEYBOARD: {
+            return transitionState(context->gameState, context->board);
+        }
+        case KEY_UP:
+        case KEY_DOWN: {
+            return selectPiece(context->gameState, context->board, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
+        }
+        case 'b': {
+            history_back(&context->gameState->history, context->board, context->gameState);
+            return transitionState(context->gameState, context->board);
+        }
+        case 'n': {
+            history_forward(&context->gameState->history, context->board, context->gameState);
+            return transitionState(context->gameState, context->board);
+        }
+        case 't': {
+            return toggleLeaderboard(context);
+        }
+        case 'q': {
+            exit(0);
+        }
+    }
+}
 
 void handleInput(Context *context) {
     int key = 0;
     while ((key = getch()) != ERR) {
-        switch (key) {
-            case KEY_ENTER_KEYBOARD: {
-                transitionState(context->gameState, context->board);
-                break;
-            }
-            case KEY_UP:
-            case KEY_DOWN: {
-                selectPiece(context->gameState, context->board, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
-                break;
-            }
-            case 'b': {
-                history_back(&context->gameState->history, context->board, context->gameState);
-                transitionState(context->gameState, context->board);
-                break;
-            }
-            case 'n': {
-                history_forward(&context->gameState->history, context->board, context->gameState);
-                transitionState(context->gameState, context->board);
-                break;
-            }
-            case 'q': {
-                exit(0);
-            }
+        if (context->currentWindow == MAIN_WINDOW) {
+            handleMainWindowInput(key, context);
+        } else if (context->currentWindow == LEADER_WINDOW) {
+            handleLeaderboardInput(key, context);
         }
     }
 }

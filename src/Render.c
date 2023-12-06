@@ -8,19 +8,6 @@
 #include <Render.h>
 #include <State.h>
 
-#define BORDER_HORIZONTAL_CHARACTER '-'
-#define BORDER_VERTICAL_CHARACTER '|'
-#define BORDER_CORNER_CHARACTER '+'
-#define BORDER_BOTTOM_MARGIN 5
-#define BORDER_TOP_MARGIN 2
-#define COLOR_PAIR_NORMAL 1
-#define COLOR_PAIR_RED_PLAYER 2
-#define COLOR_PAIR_WHITE_PLAYER 3
-#define COLOR_PAIR_RED_PLAYER_SELECTED 4
-#define COLOR_PAIR_WHITE_PLAYER_SELECTED 5
-#define COLOR_PAIR_RED_PLAYER_TARGET 6
-#define COLOR_PAIR_WHITE_PLAYER_TARGET 7
-
 
 WINDOW *win_init() {
     WINDOW *win = initscr();
@@ -62,7 +49,7 @@ void drawBorders(Context *context) {
 
 void printHelp(Context *context) {
     mvwprintw(context->windowInfo->handle, context->windowInfo->height - 3, 10,
-              "P) Play L) Load S) Save Q) Quit B) Previous move N) Next move");
+              "P) Play L) Load S) Save Q) Quit B) Previous move N) Next move T) Hall of Fame");
     context->windowInfo->update = true;
 }
 
@@ -166,16 +153,21 @@ WindowInfo *createWindow(int width, int height, bool root, int x, int y) {
 }
 
 
-Context *contextInit() {
-    Context *context = malloc(sizeof(Context));
+void initWindows(Context *context) {
     context->windowInfo = createWindow(100, 40, true, 0, 0);
     context->boardWindowInfo = createWindow(
             context->windowInfo->width - 3,
             context->windowInfo->height - BORDER_TOP_MARGIN - BORDER_BOTTOM_MARGIN - 1,
             false, 2, BORDER_TOP_MARGIN + 1);
-    context->board = boardInit();
     context->statusWindowInfo = createWindow(context->windowInfo->width - 5, 1, false, 5,
                                              context->windowInfo->height - 4);
+}
+
+Context *contextInit() {
+    Context *context = malloc(sizeof(Context));
+    context->currentWindow = MAIN_WINDOW;
+    initWindows(context);
+    context->board = boardInit();
     context->gameState = gameStateInit();
     drawStaticElements(context);
     return context;
