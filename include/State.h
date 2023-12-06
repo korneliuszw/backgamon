@@ -11,17 +11,17 @@
 
 #define SELECTED_BAR 0
 
-#define GET_MOVE_FROM_SELECTED_PIECE(gameState) \
-    gameState->availableMoves.availableMoves[gameState->selectedPiece == SELECTED_BAR ? 0 : gameState->selectedPiece]
+#define GMFRMPIC(gst) \
+    gst->mvs.avalmvs[gst->curpiece == SELECTED_BAR ? 0 : gst->curpiece]
 
 typedef struct Board Board;
 typedef struct History History;
 
 enum State {
-    PICKING_PLAYER,
-    ROLLING_DICE,
-    RESTORED_STATE,
-    SELECTING_MOVE,
+    START,
+    DICE,
+    RESTORE,
+    SELECT,
 };
 
 typedef struct Dice {
@@ -33,11 +33,11 @@ typedef struct Dice {
 typedef struct GameState {
     enum State state;
     int player;
-    int selectedPiece;
+    int curpiece;
     bool update;
     int sleep;
     Dice *dice;
-    Moves availableMoves;
+    Moves mvs;
     History *history;
 } GameState;
 

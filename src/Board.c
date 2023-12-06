@@ -6,12 +6,12 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b)
 
 int getPlayerBoardStart(int player) {
-    if (player == PLAYER_RED) return 0;
+    if (player == PR) return 0;
     return 18;
 }
 
 int getPlayerBoardEnd(int player) {
-    if (player == PLAYER_RED) return 5;
+    if (player == PR) return 5;
     return 23;
 }
 
@@ -19,7 +19,7 @@ bool areAllPiecesHome(Board *board, int player) {
     int end = getPlayerBoardEnd(player);
     int start = getPlayerBoardStart(player);
     for (int i = 0; i < BOARD_POINTS; i++) {
-        if (board->points[i].pieces > 0 && board->points[i].player == player && (i < start || i > end)) {
+        if (board->pts[i].pieces > 0 && board->pts[i].player == player && (i < start || i > end)) {
             return false;
         }
     }
@@ -50,37 +50,37 @@ int *rollDice(int *movesNumber) {
 }
 
 bool canMoveToDestination(Board *board, int player, int to) {
-    if (to == (player == PLAYER_RED ? -1 : BOARD_POINTS)) return areAllPiecesHome(board, player);
+    if (to == (player == PR ? -1 : BOARD_POINTS)) return areAllPiecesHome(board, player);
     else if (to < 0 || to >= BOARD_POINTS) return false;
-    else if (board->points[to].pieces > 1 && board->points[to].player != player) return false;
+    else if (board->pts[to].pieces > 1 && board->pts[to].player != player) return false;
     return true;
 }
 
 bool canMovePiece(Board *board, int player, int from, int to) {
     if (from < 0 || from >= BOARD_POINTS) return false;
-    else if (board->bars[player - 1].pieces > 0 && from != (player == PLAYER_RED ? 0 : BOARD_POINTS - 1)) return false;
-    else if (player == PLAYER_RED && from < to) return false; // clockwise movement only
-    else if (player == PLAYER_WHITE && from > to) return false; // counter-clockwise movement only
-    else if (board->points[from].pieces == 0) return false;
-    else if (board->points[from].player != player) return false;
+    else if (board->bars[player - 1].pieces > 0 && from != (player == PR ? 0 : BOARD_POINTS - 1)) return false;
+    else if (player == PR && from < to) return false; // clockwise movement only
+    else if (player == PW && from > to) return false; // counter-clockwise movement only
+    else if (board->pts[from].pieces == 0) return false;
+    else if (board->pts[from].player != player) return false;
     return canMoveToDestination(board, player, to);
 }
 
 void movePieceOut(Board *board, int player) {
-    if (board->remainingPieces[player - 1] == 1) {
+    if (board->rempic[player - 1] == 1) {
         winner(board, player);
-    } else board->remainingPieces[player - 1]--;
+    } else board->rempic[player - 1]--;
 }
 
 bool movePiece(Board *board, int player, int from, int to) {
-    if (to == (player == PLAYER_RED ? BOARD_POINTS : -1)) movePieceOut(board, player);
-    if (board->points[to].player != player) {
-        board->points[to].pieces = 0;
-        board->bars[board->points[to].player - 1].pieces++;
+    if (to == (player == PR ? BOARD_POINTS : -1)) movePieceOut(board, player);
+    if (board->pts[to].player != player) {
+        board->pts[to].pieces = 0;
+        board->bars[board->pts[to].player - 1].pieces++;
     }
-    board->points[from].pieces = MAX(0, board->points[from].pieces - 1));
-    board->points[to].pieces++;
-    board->points[to].player = player;
+    board->pts[from].pieces = MAX(0, board->pts[from].pieces - 1));
+    board->pts[to].pieces++;
+    board->pts[to].player = player;
     return true;
 }
 
@@ -90,28 +90,28 @@ void winner(Board *board, int player) {
 }
 
 void seedPoint(Board *board, int player, int point, int pieces) {
-    board->points[point].player = player;
-    board->points[point].pieces = pieces;
+    board->pts[point].player = player;
+    board->pts[point].pieces = pieces;
 }
 
 void seedWhitePlayer(Board *board) {
-    seedPoint(board, PLAYER_WHITE, 0, 2);
-    seedPoint(board, PLAYER_WHITE, 11, 5);
-    seedPoint(board, PLAYER_WHITE, 16, 3);
-    seedPoint(board, PLAYER_WHITE, 18, 5);
-    board->remainingPieces[PLAYER_WHITE - 1] = 15;
-    board->bars[PLAYER_WHITE - 1].pieces = 0;
-    board->bars[PLAYER_WHITE - 1].player = PLAYER_WHITE;
+    seedPoint(board, PW, 0, 2);
+    seedPoint(board, PW, 11, 5);
+    seedPoint(board, PW, 16, 3);
+    seedPoint(board, PW, 18, 5);
+    board->rempic[PW - 1] = 15;
+    board->bars[PW - 1].pieces = 0;
+    board->bars[PW - 1].player = PW;
 }
 
 void seedRedPlayer(Board *board) {
-    seedPoint(board, PLAYER_RED, 5, 5);
-    seedPoint(board, PLAYER_RED, 7, 3);
-    seedPoint(board, PLAYER_RED, 12, 5);
-    seedPoint(board, PLAYER_RED, 23, 2);
-    board->remainingPieces[PLAYER_RED - 1] = 15;
-    board->bars[PLAYER_RED - 1].pieces = 0;
-    board->bars[PLAYER_RED - 1].player = PLAYER_RED;
+    seedPoint(board, PR, 5, 5);
+    seedPoint(board, PR, 7, 3);
+    seedPoint(board, PR, 12, 5);
+    seedPoint(board, PR, 23, 2);
+    board->rempic[PR - 1] = 15;
+    board->bars[PR - 1].pieces = 0;
+    board->bars[PR - 1].player = PR;
 }
 
 Board *boardInit() {
@@ -119,8 +119,8 @@ Board *boardInit() {
     Board *board = malloc(sizeof(Board));
     board->winner = 0;
     for (int i = 0; i < BOARD_POINTS; i++) {
-        board->points[i].pieces = 0;
-        board->points[i].player = 0;
+        board->pts[i].pieces = 0;
+        board->pts[i].player = 0;
     }
     seedRedPlayer(board);
     seedWhitePlayer(board);

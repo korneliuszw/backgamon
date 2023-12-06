@@ -9,6 +9,17 @@
 #include <State.h>
 
 
+void pair_init() {
+    start_color();
+    init_pair(CPN, COLOR_BLACK, COLOR_BLUE);
+    init_pair(CPRP, COLOR_RED, COLOR_BLACK);
+    init_pair(CPWP, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(CPRPS, COLOR_RED, COLOR_WHITE);
+    init_pair(CPWPS, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(CPRPT, COLOR_RED, COLOR_GREEN);
+    init_pair(CPWPT, COLOR_YELLOW, COLOR_GREEN);
+}
+
 WINDOW *win_init() {
     WINDOW *win = initscr();
     cbreak();
@@ -22,80 +33,79 @@ WINDOW *win_init() {
         printf("Your terminal does not support color\n");
         exit(1);
     }
-    start_color();
-    init_pair(COLOR_PAIR_NORMAL, COLOR_BLACK, COLOR_BLUE);
-    init_pair(COLOR_PAIR_RED_PLAYER, COLOR_RED, COLOR_BLACK);
-    init_pair(COLOR_PAIR_WHITE_PLAYER, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(COLOR_PAIR_RED_PLAYER_SELECTED, COLOR_RED, COLOR_WHITE);
-    init_pair(COLOR_PAIR_WHITE_PLAYER_SELECTED, COLOR_YELLOW, COLOR_WHITE);
-    init_pair(COLOR_PAIR_RED_PLAYER_TARGET, COLOR_RED, COLOR_GREEN);
-    init_pair(COLOR_PAIR_WHITE_PLAYER_TARGET, COLOR_YELLOW, COLOR_GREEN);
+    pair_init();
     return win;
 }
 
-void drawBorders(Context *context) {
-    for (int i = 0; i < context->windowInfo->width; i++) {
-        mvwaddch(context->windowInfo->handle, BORDER_TOP_MARGIN, i,
-                 i == 0 || i == context->windowInfo->width - 1 ? BORDER_CORNER_CHARACTER : BORDER_HORIZONTAL_CHARACTER);
-        mvwaddch(context->windowInfo->handle, context->windowInfo->height - BORDER_BOTTOM_MARGIN, i,
-                 i == 0 || i == context->windowInfo->width - 1 ? BORDER_CORNER_CHARACTER : BORDER_HORIZONTAL_CHARACTER);
+// draw borders of a border
+void drwbor(Ctx *Ctx) {
+    for (int i = 0; i < Ctx->wminf->w; i++) {
+        mvwaddch(Ctx->wminf->handle, BORDER_TOP_MARGIN, i,
+                 i == 0 || i == Ctx->wminf->w - 1 ? BORDER_CORNER_CHARACTER : BORDER_HORIZONTAL_CHARACTER);
+        mvwaddch(Ctx->wminf->handle, Ctx->wminf->h - BORDER_BOTTOM_MARGIN, i,
+                 i == 0 || i == Ctx->wminf->w - 1 ? BORDER_CORNER_CHARACTER : BORDER_HORIZONTAL_CHARACTER);
     }
-    for (int i = BORDER_TOP_MARGIN + 1; i < context->windowInfo->height - BORDER_BOTTOM_MARGIN; i++) {
-        mvwaddch(context->windowInfo->handle, i, 0, BORDER_VERTICAL_CHARACTER);
-        mvwaddch(context->windowInfo->handle, i, context->windowInfo->width - 1, BORDER_VERTICAL_CHARACTER);
+    for (int i = BORDER_TOP_MARGIN + 1; i < Ctx->wminf->h - BORDER_BOTTOM_MARGIN; i++) {
+        mvwaddch(Ctx->wminf->handle, i, 0, BORDER_VERTICAL_CHARACTER);
+        mvwaddch(Ctx->wminf->handle, i, Ctx->wminf->w - 1, BORDER_VERTICAL_CHARACTER);
     }
-    context->windowInfo->update = true;
+    Ctx->wminf->update = true;
 }
 
-void printHelp(Context *context) {
-    mvwprintw(context->windowInfo->handle, context->windowInfo->height - 3, 10,
+// draw menu help
+void drwhelp(Ctx *Ctx) {
+    mvwprintw(Ctx->wminf->handle, Ctx->wminf->h - 3, 10,
               "P) Play L) Load S) Save Q) Quit B) Previous move N) Next move T) Hall of Fame");
-    context->windowInfo->update = true;
+    Ctx->wminf->update = true;
 }
 
-void printTitle(Context *context) {
-    mvwprintw(context->windowInfo->handle, 1, 2, "Backgamon - Korneliusz Wojnicz ");
-    context->windowInfo->update = true;
+// draw game name
+void drwname(Ctx *Ctx) {
+    mvwprintw(Ctx->wminf->handle, 1, 2, "Backgamon - Korneliusz Wojnicz ");
+    Ctx->wminf->update = true;
 }
 
-void drawStaticElements(Context *context) {
-    drawBorders(context);
-    printHelp(context);
-    printTitle(context);
+// draw static elements for menu
+void drwmenu(Ctx *Ctx) {
+    drwbor(Ctx);
+    drwhelp(Ctx);
+    drwname(Ctx);
 }
 
-void drawPoint(Context *context, int point, int x, int y) {
-    BoardPoint boardPoint = context->board->points[point];
-    char *emptyChecker = point % 2 ? "^^^" : ":::";
-    int color =
-            boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER) : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER);
-    int step = point > 11 ? 1 : -1;
+// draw p pieces
+int drawppic(Ctx *ctx, BoardPoint *bp, int p, int stp, int *y, int x) {
     int i = 0;
-    USE_COLOR(true, color, context->boardWindowInfo->handle) {
-            mvwprintw(context->boardWindowInfo->handle, y += (i * step), x, "|=|");
-            for (; i < boardPoint.pieces; i++) {
-                USE_COLOR(i == boardPoint.pieces - 1 && context->gameState->selectedPiece == point,
-                          boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_SELECTED)
-                                                          : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_SELECTED),
-                          context->boardWindowInfo->handle) {
-                        mvwprintw(context->boardWindowInfo->handle, y + (i * step), x, "|=|");
+    USE_COLOR(true, bp->player == PR ? COLOR_PAIR(CPRP) : COLOR_PAIR(CPWP), ctx->wbinf->handle) {
+            mvwprintw(ctx->wbinf->handle, *y += (i * stp), x, "|=|");
+            for (; i < bp->pieces; i++) {
+                USE_COLOR(i == bp->pieces - 1 && ctx->gs->curpiece == p,
+                          bp->player == PR ? COLOR_PAIR(CPRPS)
+                                           : COLOR_PAIR(CPWPS),
+                          ctx->wbinf->handle) {
+                        mvwprintw(ctx->wbinf->handle, *y + (i * stp), x, "|=|");
                     }
             }
         }
-    int targetColor = boardPoint.player == PLAYER_RED ? COLOR_PAIR(COLOR_PAIR_RED_PLAYER_TARGET)
-                                                      : COLOR_PAIR(COLOR_PAIR_WHITE_PLAYER_TARGET);
-    if (context->gameState->availableMoves.movesCount > 0 &&
-        GET_MOVE_FROM_SELECTED_PIECE(context->gameState).to == point) {
-        wattron(context->boardWindowInfo->handle, targetColor);
-    }
+    return i;
+}
+
+// draw board pt from given pt
+void drwp(Ctx *ctx, int pt, int x, int y) {
+    BoardPoint bp = ctx->b->pts[pt];
+    char *empty = pt % 2 ? "^^^" : ":::";
+    int stp = pt > 11 ? 1 : -1;
+    int i = drawppic(ctx, &bp, pt, stp, &y, x);
+    int tgc = bp.player == PR ? COLOR_PAIR(CPRPT)
+                              : COLOR_PAIR(CPWPT);
+    ctx->gs->mvs.mvc > 0 && GMFRMPIC(ctx->gs).to == pt && wattron(ctx->wbinf->handle, tgc);
     for (; i < 6; i++) {
-        mvwprintw(context->boardWindowInfo->handle, y + (i * step), x, emptyChecker);
-        wattroff(context->boardWindowInfo->handle, targetColor);
+        mvwprintw(ctx->wbinf->handle, y + (i * stp), x, empty);
+        wattroff(ctx->wbinf->handle, tgc);
     }
 }
 
-
-void drawBoardPoints(Context *context, int x, int y) {
+// draw board pts starting from  x and y coordinate
+void drwbp(Ctx *Ctx, int x, int y) {
     int step = -5;
     for (int i = 0; i < BOARD_POINTS; i++) {
         if (i == 12) {
@@ -108,67 +118,93 @@ void drawBoardPoints(Context *context, int x, int y) {
         } else if (i == 18) {
             x += 6;
         }
-        drawPoint(context, i, x, y);
+        drwp(Ctx, i, x, y);
         x += step;
     }
 }
 
-void drawBoard(Context *context) {
-    drawBoardPoints(context, context->boardWindowInfo->width - 30, context->boardWindowInfo->height - 5);
-    drawDice(context);
-    context->boardWindowInfo->update = true;
+// draw whole board
+void drwb(Ctx *Ctx) {
+    drwbp(Ctx, Ctx->wbinf->w - 30, Ctx->wbinf->h - 5);
+    drwd(Ctx);
+    Ctx->wbinf->update = true;
 }
 
 
-void drawDice(Context *context) {
-    wclear(context->statusWindowInfo->handle);
-    if (context->gameState->state == ROLLING_DICE || context->gameState->state == PICKING_PLAYER) {
-        wprintw(context->statusWindowInfo->handle, "Press Enter to roll ");
-    } else if (context->gameState->state == SELECTING_MOVE) {
-        wprintw(context->statusWindowInfo->handle, "Press Enter to move");
+// draw move status
+void drwms(Ctx *ctx) {
+    if (ctx->gs->state == DICE || ctx->gs->state == START) {
+        wprintw(ctx->wsinf->handle, "Press Enter to roll ");
+    } else if (ctx->gs->state == SELECT) {
+        wprintw(ctx->wsinf->handle, "Press Enter to move");
     }
-    if (context->gameState->player != 0) {
-        wprintw(context->statusWindowInfo->handle, "Player: %s ",
-                context->gameState->player == PLAYER_WHITE ? "White" : "Red");
+}
+
+// draw current player move
+void drawp(Ctx *ctx) {
+    if (ctx->gs->player != 0) {
+        wprintw(ctx->wsinf->handle, "Player: %s ",
+                ctx->gs->player == PW ? "White" : "Red");
     }
-    if (context->gameState->state > ROLLING_DICE) {
-        for (int i = 0; i < context->gameState->dice->rollsCount; i++) {
-            USE_COLOR(i == context->gameState->dice->currentRoll, COLOR_PAIR_RED_PLAYER_SELECTED,
-                      context->statusWindowInfo->handle) {
-                    if (i == context->gameState->dice->currentRoll) waddch(context->statusWindowInfo->handle, 'c');
-                    wprintw(context->statusWindowInfo->handle, "%d ",
-                            context->gameState->dice->rolls[i]);
+}
+
+// draw value of a single dice
+void drwdval(Ctx *ctx, int it) {
+    if (it == ctx->gs->dice->currentRoll) waddch(ctx->wsinf->handle, 'c');
+    wprintw(ctx->wsinf->handle, "%d ",
+            ctx->gs->dice->rolls[it]);
+}
+
+// draw move and dice status
+void drwd(Ctx *ctx) {
+    wclear(ctx->wsinf->handle);
+    drwms(ctx);
+    drawp(ctx);
+    if (ctx->gs->state > DICE) {
+        for (int i = 0; i < ctx->gs->dice->rollsCount; i++) {
+            USE_COLOR(i == ctx->gs->dice->currentRoll, CPRPS,
+                      ctx->wsinf->handle) {
+                    drwdval(ctx, i);
                 }
         }
     }
-    wrefresh(context->statusWindowInfo->handle);
+    wrefresh(ctx->wsinf->handle);
 }
 
-WindowInfo *createWindow(int width, int height, bool root, int x, int y) {
+// create window with given parameters
+WindowInfo *crwin(int width, int height, bool root, int x, int y) {
     WindowInfo *windowInfo = malloc(sizeof(WindowInfo));
     windowInfo->handle = root ? win_init() : newwin(height, width, y, x);
-    windowInfo->width = width;
-    windowInfo->height = height;
+    windowInfo->w = width;
+    windowInfo->h = height;
     return windowInfo;
 }
 
 
-void initWindows(Context *context) {
-    context->windowInfo = createWindow(100, 40, true, 0, 0);
-    context->boardWindowInfo = createWindow(
-            context->windowInfo->width - 3,
-            context->windowInfo->height - BORDER_TOP_MARGIN - BORDER_BOTTOM_MARGIN - 1,
+void initWindows(Ctx *ctx) {
+    ctx->wminf = crwin(100, 40, true, 0, 0);
+    ctx->wbinf = crwin(
+            ctx->wminf->w - 3,
+            ctx->wminf->h - BORDER_TOP_MARGIN - BORDER_BOTTOM_MARGIN - 1,
             false, 2, BORDER_TOP_MARGIN + 1);
-    context->statusWindowInfo = createWindow(context->windowInfo->width - 5, 1, false, 5,
-                                             context->windowInfo->height - 4);
+    ctx->wsinf = crwin(ctx->wminf->w - 5, 1, false, 5,
+                       ctx->wminf->h - 4);
 }
 
-Context *contextInit() {
-    Context *context = malloc(sizeof(Context));
-    context->currentWindow = MAIN_WINDOW;
-    initWindows(context);
-    context->board = boardInit();
-    context->gameState = gameStateInit();
-    drawStaticElements(context);
-    return context;
+Ctx *getctx() {
+    static Ctx *ctx = NULL;
+    if (ctx == NULL) {
+        ctx = malloc(sizeof(Ctx));
+    }
+    return ctx;
+}
+
+Ctx *CtxInit() {
+    Ctx *ctx = getctx();
+    ctx->curwin = MAIN_WINDOW;
+    initWindows(ctx);
+    ctx->b = boardInit();
+    ctx->gs = gameStateInit();
+    drwmenu(ctx);
+    return ctx;
 }

@@ -33,10 +33,10 @@ void start_history_entry(History **history, Board *board, Move *move, Dice *dice
     newHistory->prev = *history;
     (*history)->next = newHistory;
     newHistory->next = NULL;
-    newHistory->player = board->points[move->from].player;
+    newHistory->player = board->pts[move->from].player;
     memcpy(newHistory->dice, dice, sizeof(Dice));
-    memcpy(newHistory->prevFromPoint, board->points + move->from, sizeof(BoardPoint));
-    memcpy(newHistory->prevToPoint, board->points + move->to, sizeof(BoardPoint));
+    memcpy(newHistory->prevFromPoint, board->pts + move->from, sizeof(BoardPoint));
+    memcpy(newHistory->prevToPoint, board->pts + move->to, sizeof(BoardPoint));
     memcpy(newHistory->move, move, sizeof(Move));
     *history = newHistory;
 }
@@ -44,8 +44,8 @@ void start_history_entry(History **history, Board *board, Move *move, Dice *dice
 void commit_history_entry(History *history, Board *board, Move *move) {
     history->newToPoint = malloc(sizeof(BoardPoint));
     history->newFromPoint = malloc(sizeof(BoardPoint));
-    memcpy(history->newFromPoint, board->points + move->from, sizeof(Move));
-    memcpy(history->newToPoint, board->points + move->to, sizeof(Move));
+    memcpy(history->newFromPoint, board->pts + move->from, sizeof(Move));
+    memcpy(history->newToPoint, board->pts + move->to, sizeof(Move));
 }
 
 
@@ -53,15 +53,15 @@ void history_update(History *history, Board *board, GameState *gameState) {
     if (history->dice)
         memcpy(gameState->dice, history->dice, sizeof(Dice));
     gameState->player = history->player;
-    gameState->state = RESTORED_STATE;
+    gameState->state = RESTORE;
 }
 
 void history_back(History **history, Board *board, GameState *gameState) {
     History *historyItem = *history;
     if (historyItem->prev == NULL) return;
     *history = historyItem->prev;
-    board->points[historyItem->move->from] = *historyItem->prevFromPoint;
-    board->points[historyItem->move->to] = *historyItem->prevToPoint;
+    board->pts[historyItem->move->from] = *historyItem->prevFromPoint;
+    board->pts[historyItem->move->to] = *historyItem->prevToPoint;
     history_update(historyItem, board, gameState);
 }
 
@@ -70,8 +70,8 @@ void history_forward(History **history, Board *board, GameState *gameState) {
     if (historyItem->next == NULL) return;
     *history = historyItem->next;
     historyItem = *history;
-    board->points[historyItem->move->from] = *historyItem->newFromPoint;
-    board->points[historyItem->move->to] = *historyItem->newToPoint;
+    board->pts[historyItem->move->from] = *historyItem->newFromPoint;
+    board->pts[historyItem->move->to] = *historyItem->newToPoint;
     if (gameState->dice != NULL) free(gameState->dice);
     memcpy(gameState->dice, historyItem->dice, sizeof(Dice));
     history_update(*history, board, gameState);

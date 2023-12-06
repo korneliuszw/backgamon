@@ -7,7 +7,7 @@
 
 #define MAX_LEADERS 5
 
-typedef struct Context Context;
+typedef struct Ctx Ctx;
 
 typedef struct LeaderboardEntry {
     char *name;
@@ -23,10 +23,10 @@ Leaderboard getLeaderboard();
 
 void saveResult(char *name, int score);
 
-void displayLeaderboard(Context *context);
+void displayLeaderboard(Ctx *Ctx);
 
-void toggleLeaderboard(Context *context);
+void toggleLeaderboard(Ctx *Ctx);
 
-void moveLeaderboardCursor(Context *context, int entry);
+void moveLeaderboardCursor(Ctx *Ctx, int entry);
 
 #endif //BAKAGAMON_LEADERBOARD_H

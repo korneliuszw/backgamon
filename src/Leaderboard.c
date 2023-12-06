@@ -57,7 +57,7 @@ void saveResult(char *name, int score) {
 
 void renderLeaderboard(WindowInfo *windowInfo, LeaderboardState *state) {
     for (int i = 0; i < state->leaderboard.leaders; i++) {
-        USE_COLOR(i == state->selectedEntry, COLOR_PAIR_WHITE_PLAYER_SELECTED, windowInfo->handle) {
+        USE_COLOR(i == state->selectedEntry, CPWPS, windowInfo->handle) {
                 mvwprintw(windowInfo->handle, i + 1, 1, "%d) %s %d", i, state->leaderboard.entries[i].name,
                           state->leaderboard.entries[i].score);
             }
@@ -65,34 +65,34 @@ void renderLeaderboard(WindowInfo *windowInfo, LeaderboardState *state) {
     wrefresh(windowInfo->handle);
 }
 
-void moveLeaderboardCursor(Context *context, int entry) {
-    LeaderboardState *state = (LeaderboardState *) context->workingMemory;
+void moveLeaderboardCursor(Ctx *Ctx, int entry) {
+    LeaderboardState *state = (LeaderboardState *) Ctx->tmpmem;
     if (entry > 0) {
         state->selectedEntry = (state->selectedEntry + 1) % state->leaderboard.leaders;
     } else {
         state->selectedEntry = (state->selectedEntry - 1 + state->leaderboard.leaders) %
                                state->leaderboard.leaders;
     }
-    renderLeaderboard(context->modalWindow, context->workingMemory);
+    renderLeaderboard(Ctx->wmodinf, Ctx->tmpmem);
 }
 
-void displayLeaderboard(Context *context) {
-    context->currentWindow = LEADER_WINDOW;
-    context->modalWindow = createWindow(10, 10, false, context->windowInfo->width / 2 - 5,
-                                        context->windowInfo->height / 2 - 5);
-    context->workingMemory = calloc(1, sizeof(LeaderboardState));
-    ((LeaderboardState *) (context->workingMemory))->leaderboard = getLeaderboard();
-    renderLeaderboard(context->modalWindow, context->workingMemory);
+void displayLeaderboard(Ctx *Ctx) {
+    Ctx->curwin = LEADER_WINDOW;
+    Ctx->wmodinf = crwin(10, 10, false, Ctx->wminf->w / 2 - 5,
+                         Ctx->wminf->h / 2 - 5);
+    Ctx->tmpmem = calloc(1, sizeof(LeaderboardState));
+    ((LeaderboardState *) (Ctx->tmpmem))->leaderboard = getLeaderboard();
+    renderLeaderboard(Ctx->wmodinf, Ctx->tmpmem);
 }
 
-void toggleLeaderboard(Context *context) {
-    if (context->currentWindow == LEADER_WINDOW) {
-        context->currentWindow = MAIN_WINDOW;
-        free(context->workingMemory);
-        delwin(context->modalWindow->handle);
-        free(context->modalWindow);
-        context->modalWindow = NULL;
+void toggleLeaderboard(Ctx *Ctx) {
+    if (Ctx->curwin == LEADER_WINDOW) {
+        Ctx->curwin = MAIN_WINDOW;
+        free(Ctx->tmpmem);
+        delwin(Ctx->wmodinf->handle);
+        free(Ctx->wmodinf);
+        Ctx->wmodinf = NULL;
     } else {
-        displayLeaderboard(context);
+        displayLeaderboard(Ctx);
     }
 }

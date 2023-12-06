@@ -12,8 +12,8 @@ void transitionPickPlayer(GameState *gameState) {
     do {
         gameState->dice->rolls = rollDice(&gameState->dice->rollsCount);
     } while (gameState->dice->rollsCount == 4);
-    if (gameState->dice->rolls[0] > gameState->dice->rolls[1]) gameState->player = PLAYER_RED;
-    else gameState->player = PLAYER_WHITE;
+    if (gameState->dice->rolls[0] > gameState->dice->rolls[1]) gameState->player = PR;
+    else gameState->player = PW;
 }
 
 void transitionDiceRoll(GameState *gameState, Board *board) {
@@ -23,22 +23,22 @@ void transitionDiceRoll(GameState *gameState, Board *board) {
 }
 
 void transitionMove(GameState *gameState, Board *board) {
-    if (gameState->availableMoves.movesCount > 0) {
-        start_history_entry(&gameState->history, board, &GET_MOVE_FROM_SELECTED_PIECE(gameState), gameState->dice);
+    if (gameState->mvs.mvc > 0) {
+        start_history_entry(&gameState->history, board, &GMFRMPIC(gameState), gameState->dice);
         movePiece(board, gameState->player,
-                  GET_MOVE_FROM_SELECTED_PIECE(gameState).from,
-                  GET_MOVE_FROM_SELECTED_PIECE(gameState).to);
-        commit_history_entry(gameState->history, board, &GET_MOVE_FROM_SELECTED_PIECE(gameState));
+                  GMFRMPIC(gameState).from,
+                  GMFRMPIC(gameState).to);
+        commit_history_entry(gameState->history, board, &GMFRMPIC(gameState));
     }
     gameState->update = true;
     gameState->dice->currentRoll++;
     if (gameState->dice->currentRoll < gameState->dice->rollsCount) {
-        gameState->state = SELECTING_MOVE;
+        gameState->state = SELECT;
         gameState->sleep = 200; // transition delay
         getMoves(gameState, board);
     } else {
-        gameState->player = gameState->player == PLAYER_WHITE ? PLAYER_RED : PLAYER_WHITE;
-        gameState->state = ROLLING_DICE;
+        gameState->player = gameState->player == PW ? PR : PW;
+        gameState->state = DICE;
         transitionState(gameState, board);
     }
 }
@@ -46,19 +46,19 @@ void transitionMove(GameState *gameState, Board *board) {
 
 void transitionState(GameState *gameState, Board *board) {
     switch (gameState->state) {
-        case PICKING_PLAYER:
+        case START:
             transitionPickPlayer(gameState);
-            gameState->state = ROLLING_DICE;
+            gameState->state = DICE;
             break;
-        case ROLLING_DICE:
+        case DICE:
             transitionDiceRoll(gameState, board);
-            gameState->state = SELECTING_MOVE;
+            gameState->state = SELECT;
             break;
-        case RESTORED_STATE:
+        case RESTORE:
             getMoves(gameState, board);
-            gameState->state = SELECTING_MOVE;
+            gameState->state = SELECT;
             break;
-        case SELECTING_MOVE:
+        case SELECT:
             transitionMove(gameState, board);
             break;
     }
@@ -67,10 +67,10 @@ void transitionState(GameState *gameState, Board *board) {
 
 GameState *gameStateInit() {
     GameState *gameState = malloc(sizeof(GameState));
-    gameState->state = PICKING_PLAYER;
+    gameState->state = START;
     gameState->player = 0;
     gameState->dice = malloc(sizeof(Dice));
-    gameState->selectedPiece = -1;
+    gameState->curpiece = -1;
     gameState->update = false;
     gameState->history = initHistory();
     return gameState;

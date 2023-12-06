@@ -7,6 +7,6 @@
 
 #include <Render.h>
 
-void handleInput(Context *context);
+void handleInput(Ctx *Ctx);
 
 #endif //BAKAGAMON_INPUT_H

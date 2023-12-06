@@ -17,8 +17,8 @@ typedef struct Move {
 } Move;
 
 typedef struct {
-    int movesCount;
-    Move *availableMoves;
+    int mvc;
+    Move *avalmvs;
 } Moves;
 
 void selectPiece(GameState *gameState, Board *board, int direction);

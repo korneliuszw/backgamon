@@ -12,39 +12,39 @@
 
 #define KEY_ENTER_KEYBOARD 13
 
-void handleLeaderboardInput(int key, Context *context) {
+void handleLeaderboardInput(int key, Ctx *Ctx) {
     switch (key) {
         case KEY_UP:
         case KEY_DOWN: {
-            return moveLeaderboardCursor(context, key == KEY_UP ? -1 : 1);
+            return moveLeaderboardCursor(Ctx, key == KEY_UP ? -1 : 1);
         }
         case KEY_ENTER_KEYBOARD:
         case 'q':
         case 't': {
-            return toggleLeaderboard(context);
+            return toggleLeaderboard(Ctx);
         }
     }
 }
 
-void handleMainWindowInput(int key, Context *context) {
+void handleMainWindowInput(int key, Ctx *Ctx) {
     switch (key) {
         case KEY_ENTER_KEYBOARD: {
-            return transitionState(context->gameState, context->board);
+            return transitionState(Ctx->gs, Ctx->b);
         }
         case KEY_UP:
         case KEY_DOWN: {
-            return selectPiece(context->gameState, context->board, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
+            return selectPiece(Ctx->gs, Ctx->b, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
         }
         case 'b': {
-            history_back(&context->gameState->history, context->board, context->gameState);
-            return transitionState(context->gameState, context->board);
+            history_back(&Ctx->gs->history, Ctx->b, Ctx->gs);
+            return transitionState(Ctx->gs, Ctx->b);
         }
         case 'n': {
-            history_forward(&context->gameState->history, context->board, context->gameState);
-            return transitionState(context->gameState, context->board);
+            history_forward(&Ctx->gs->history, Ctx->b, Ctx->gs);
+            return transitionState(Ctx->gs, Ctx->b);
         }
         case 't': {
-            return toggleLeaderboard(context);
+            return toggleLeaderboard(Ctx);
         }
         case 'q': {
             exit(0);
@@ -52,13 +52,13 @@ void handleMainWindowInput(int key, Context *context) {
     }
 }
 
-void handleInput(Context *context) {
+void handleInput(Ctx *Ctx) {
     int key = 0;
     while ((key = getch()) != ERR) {
-        if (context->currentWindow == MAIN_WINDOW) {
-            handleMainWindowInput(key, context);
-        } else if (context->currentWindow == LEADER_WINDOW) {
-            handleLeaderboardInput(key, context);
+        if (Ctx->curwin == MAIN_WINDOW) {
+            handleMainWindowInput(key, Ctx);
+        } else if (Ctx->curwin == LEADER_WINDOW) {
+            handleLeaderboardInput(key, Ctx);
         }
     }
 }

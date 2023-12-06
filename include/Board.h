@@ -5,8 +5,10 @@
 
 #define BOARD_POINTS 24
 #define PLAYERS 2
-#define PLAYER_RED 1
-#define PLAYER_WHITE 2
+// red player index
+#define PR 1
+// white player index
+#define PW 2
 #define BAR_POINT 36
 
 
@@ -17,9 +19,9 @@ typedef struct BoardPoint {
 
 
 typedef struct Board {
-    BoardPoint points[BOARD_POINTS];
+    BoardPoint pts[BOARD_POINTS];
     BoardPoint bars[PLAYERS];
-    int remainingPieces[PLAYERS];
+    int rempic[PLAYERS];
     int winner;
 } Board;
 
@@ -31,7 +33,7 @@ bool areAllPiecesHome(Board *board, int player);
 
 // Rolls dices and returns an array of 2 or 4 integers
 // the number of integers depends on the result of the roll
-// and is returned to moves ptr
+// and is returned to mvs ptr
 // This function assumes rand is already seeded
 int *rollDice(int *moves);
 

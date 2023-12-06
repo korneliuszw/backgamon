@@ -29,15 +29,15 @@ TEST_F(MoveTest, GetMoveShouldReturnCorrectMoves) {
     gameState->dice->rolls[1] = 2;
     gameState->dice->rollsCount = 2;
     gameState->dice->currentRoll = 0;
-    gameState->player = PLAYER_RED;
+    gameState->player = PR;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->availableMoves.movesCount, 1 + 1 + 1);
+    EXPECT_EQ(gameState->mvs.mvc, 1 + 1 + 1);
     int realCount = 0;
     for (int i = 0; i < BOARD_POINTS; i++) {
-        if (gameState->availableMoves.availableMoves[i].from != gameState->availableMoves.availableMoves[i].to)
+        if (gameState->mvs.avalmvs[i].from != gameState->mvs.avalmvs[i].to)
             realCount++;
     }
-    EXPECT_EQ(realCount, gameState->availableMoves.movesCount);
+    EXPECT_EQ(realCount, gameState->mvs.mvc);
 }
 
 TEST_F(MoveTest, GetMoveShouldReturnCorrectMovesForPiecesInBar) {
@@ -45,46 +45,46 @@ TEST_F(MoveTest, GetMoveShouldReturnCorrectMovesForPiecesInBar) {
     gameState->dice->rolls = (int *) malloc(sizeof(int) * 2);
     gameState->dice->rolls[0] = 1;
     gameState->dice->rolls[1] = 6;
-    board->bars[PLAYER_RED - 1].pieces = 1;
-    board->bars[PLAYER_WHITE - 1].pieces = 1;
-    gameState->player = PLAYER_WHITE;
+    board->bars[PR - 1].pieces = 1;
+    board->bars[PW - 1].pieces = 1;
+    gameState->player = PW;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->availableMoves.movesCount, 1);
-    EXPECT_EQ(gameState->availableMoves.availableMoves[0].from, -1);
-    EXPECT_EQ(gameState->availableMoves.availableMoves[0].to, 0);
+    EXPECT_EQ(gameState->mvs.mvc, 1);
+    EXPECT_EQ(gameState->mvs.avalmvs[0].from, -1);
+    EXPECT_EQ(gameState->mvs.avalmvs[0].to, 0);
     gameState->dice->currentRoll = 1;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->availableMoves.movesCount, 0);
+    EXPECT_EQ(gameState->mvs.mvc, 0);
     gameState->dice->currentRoll = 0;
-    gameState->player = PLAYER_RED;
+    gameState->player = PR;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->availableMoves.movesCount, 1);
-    EXPECT_EQ(gameState->availableMoves.availableMoves[BOARD_POINTS - 1].from, BOARD_POINTS);
-    EXPECT_EQ(gameState->availableMoves.availableMoves[BOARD_POINTS - 1].to, BOARD_POINTS - 1);
+    EXPECT_EQ(gameState->mvs.mvc, 1);
+    EXPECT_EQ(gameState->mvs.avalmvs[BOARD_POINTS - 1].from, BOARD_POINTS);
+    EXPECT_EQ(gameState->mvs.avalmvs[BOARD_POINTS - 1].to, BOARD_POINTS - 1);
     gameState->dice->currentRoll = 1;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->availableMoves.movesCount, 0);
+    EXPECT_EQ(gameState->mvs.mvc, 0);
 }
 
 TEST_F(MoveTest, GetMovesShouldSkipWhenNoMoves) {
     gameState->dice = (Dice *) malloc(sizeof(Dice));
     gameState->dice->rollsCount = 2;
     gameState->dice->rolls = (int *) malloc(sizeof(int) * 2);
-    for (auto &point: board->points) {
+    for (auto &point: board->pts) {
         point = {0, 0};
     }
-    gameState->state = SELECTING_MOVE;
+    gameState->state = SELECT;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->state, ROLLING_DICE);
+    EXPECT_EQ(gameState->state, DICE);
     gameState->dice->rolls = (int *) calloc(2, sizeof(int));
     gameState->dice->currentRoll = 0;
     gameState->dice->rolls[0] = 5;
-    gameState->player = PLAYER_WHITE;
-    gameState->state = SELECTING_MOVE;
-    board->points[0] = {1, PLAYER_WHITE};
+    gameState->player = PW;
+    gameState->state = SELECT;
+    board->pts[0] = {1, PW};
     getMoves(gameState, board);
-    EXPECT_NE(gameState->state, ROLLING_DICE);
+    EXPECT_NE(gameState->state, DICE);
     gameState->dice->currentRoll = 1;
     getMoves(gameState, board);
-    EXPECT_EQ(gameState->state, ROLLING_DICE);
+    EXPECT_EQ(gameState->state, DICE);
 }

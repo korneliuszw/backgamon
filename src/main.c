@@ -13,25 +13,25 @@
 
 
 int main() {
-    Context *context = contextInit();
-    drawBoard(context);
+    Ctx *Ctx = CtxInit();
+    drwb(Ctx);
     while (true) {
-        handleInput(context);
-        if (context->gameState->update) {
-            drawBoard(context);
-            context->gameState->update = false;
+        handleInput(Ctx);
+        if (Ctx->gs->update) {
+            drwb(Ctx);
+            Ctx->gs->update = false;
         }
-        if (context->windowInfo->update) {
-            wrefresh(context->windowInfo->handle);
-            context->windowInfo->update = false;
+        if (Ctx->wminf->update) {
+            wrefresh(Ctx->wminf->handle);
+            Ctx->wminf->update = false;
         }
-        if (context->boardWindowInfo->update) {
-            wrefresh(context->boardWindowInfo->handle);
-            context->boardWindowInfo->update = false;
+        if (Ctx->wbinf->update) {
+            wrefresh(Ctx->wbinf->handle);
+            Ctx->wbinf->update = false;
         }
-        if (context->gameState->sleep > 0) {
-            Sleep(context->gameState->sleep);
-            context->gameState->sleep = 0;
+        if (Ctx->gs->sleep > 0) {
+            Sleep(Ctx->gs->sleep);
+            Ctx->gs->sleep = 0;
         }
     }
     return 0;

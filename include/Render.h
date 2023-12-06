@@ -16,49 +16,57 @@
 #define BORDER_CORNER_CHARACTER '+'
 #define BORDER_BOTTOM_MARGIN 5
 #define BORDER_TOP_MARGIN 2
-#define COLOR_PAIR_NORMAL 1
-#define COLOR_PAIR_RED_PLAYER 2
-#define COLOR_PAIR_WHITE_PLAYER 3
-#define COLOR_PAIR_RED_PLAYER_SELECTED 4
-#define COLOR_PAIR_WHITE_PLAYER_SELECTED 5
-#define COLOR_PAIR_RED_PLAYER_TARGET 6
-#define COLOR_PAIR_WHITE_PLAYER_TARGET 7
+#define CPN 1
+// color pair for red player
+#define CPRP 2
+// color pair for white player
+#define CPWP 3
+// color pair for red player selected
+#define CPRPS 4
+// color pair for white player selected
+#define CPWPS 5
+// color pair for red player target
+#define CPRPT 6
+// color pair for white player target
+#define CPWPT 7
 
-#define USE_COLOR(cond, color, win) \
-    for (bool breaker = true; breaker; (cond) && wattroff(win,color)) \
-        for (cond && wattron(win,color); breaker; breaker = false)
+#define USE_COLOR(c, col, win) \
+    for (bool b=true;b;(c)&&wattroff(win,col)) \
+        for (c&&wattron(win,col);b;b=false)
 
 typedef struct {
     WINDOW *handle;
-    int width;
-    int height;
+    int w;
+    int h;
     bool update;
 } WindowInfo;
 
-enum CurrentWindow {
+enum CurWin {
     MAIN_WINDOW,
     LEADER_WINDOW
 };
 
-typedef struct Context {
-    WindowInfo *windowInfo;
-    WindowInfo *boardWindowInfo;
-    WindowInfo *statusWindowInfo;
-    WindowInfo *modalWindow;
-    Board *board;
-    GameState *gameState;
-    enum CurrentWindow currentWindow;
-    void *workingMemory;
-} Context;
+typedef struct Ctx {
+    WindowInfo *wminf;
+    WindowInfo *wbinf;
+    WindowInfo *wsinf;
+    WindowInfo *wmodinf;
+    Board *b;
+    GameState *gs;
+    enum CurWin curwin;
+    void *tmpmem;
+} Ctx;
 
 
-Context *contextInit();
+Ctx *CtxInit();
 
-void drawDice(Context *context);
+Ctx *getctx();
 
-void drawBoard(Context *context);
+void drwd(Ctx *ctx);
 
-WindowInfo *createWindow(int width, int height, bool root, int x, int y);
+void drwb(Ctx *Ctx);
+
+WindowInfo *crwin(int w, int h, bool root, int x, int y);
 
 
 #endif //BAKAGAMON_RENDER_H
