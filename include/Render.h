@@ -30,6 +30,11 @@
 // color pair for white player target
 #define CPWPT 7
 
+// color pair for red player potential target
+#define CPWPPT 8
+// color pair for white player potential target
+#define CPRPPT 9
+
 #define USE_COLOR(c, col, win) \
     for (bool b=true;b;(c)&&wattroff(win,col)) \
         for (c&&wattron(win,col);b;b=false)

@@ -1,6 +1,7 @@
 #include <Board.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "State.h"
 
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b)
@@ -26,22 +27,20 @@ bool areAllPiecesHome(Board *board, int player) {
     return true;
 }
 
-int throw_dice() {
-    return rand() % 6 + 1;
+Roll throw_dice() {
+    int rng = rand() % 6 + 1;
+    Roll roll = {rng, true};
+    return roll;
 }
 
 // TODO: Maybe switch to unsigned char
-int *rollDice(int *movesNumber) {
-    int *moves = malloc(sizeof(int) * 2);
+Roll *rollDice(int *movesNumber) {
+    Roll *moves = malloc(sizeof(Roll) * 2);
     *movesNumber = 2;
     moves[0] = throw_dice();
     moves[1] = throw_dice();
-    if (moves[0] == moves[1]) {
-        moves = realloc(moves, sizeof(int) * 4);
-        if (moves == NULL) {
-            *movesNumber = 0;
-            return NULL;
-        }
+    if (moves[0].roll == moves[1].roll) {
+        moves = realloc(moves, sizeof(Roll) * 4);
         moves[2] = moves[0];
         moves[3] = moves[0];
         *movesNumber = 4;

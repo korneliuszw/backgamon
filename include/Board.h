@@ -11,6 +11,8 @@
 #define PW 2
 #define BAR_POINT 36
 
+typedef struct Roll Roll;
+
 
 typedef struct BoardPoint {
     int pieces;
@@ -35,7 +37,7 @@ bool areAllPiecesHome(Board *board, int player);
 // the number of integers depends on the result of the roll
 // and is returned to mvs ptr
 // This function assumes rand is already seeded
-int *rollDice(int *moves);
+Roll *rollDice(int *moves);
 
 bool movePiece(Board *board, int player, int from, int to);
 

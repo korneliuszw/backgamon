@@ -12,7 +12,7 @@ void transitionPickPlayer(GameState *gameState) {
     do {
         gameState->dice->rolls = rollDice(&gameState->dice->rollsCount);
     } while (gameState->dice->rollsCount == 4);
-    if (gameState->dice->rolls[0] > gameState->dice->rolls[1]) gameState->player = PR;
+    if (gameState->dice->rolls[0].roll > gameState->dice->rolls[1].roll) gameState->player = PR;
     else gameState->player = PW;
 }
 
@@ -24,11 +24,11 @@ void transitionDiceRoll(GameState *gameState, Board *board) {
 
 void transitionMove(GameState *gameState, Board *board) {
     if (gameState->mvs.mvc > 0) {
-        start_history_entry(&gameState->history, board, &GMFRMPIC(gameState), gameState->dice);
+        start_history_entry(&gameState->history, board, GMFRMPIC(gameState), gameState->dice);
         movePiece(board, gameState->player,
-                  GMFRMPIC(gameState).from,
-                  GMFRMPIC(gameState).to);
-        commit_history_entry(gameState->history, board, &GMFRMPIC(gameState));
+                  GMFRMPIC(gameState)->from,
+                  GMFRMPIC(gameState)->to);
+        commit_history_entry(gameState->history, board, GMFRMPIC(gameState));
     }
     gameState->update = true;
     gameState->dice->currentRoll++;
@@ -74,9 +74,4 @@ GameState *gameStateInit() {
     gameState->update = false;
     gameState->history = initHistory();
     return gameState;
-}
-
-int getCurrentRoll(GameState *gameState) {
-    if (gameState->dice->rollsCount <= gameState->dice->currentRoll) exit(1);
-    return gameState->dice->rolls[gameState->dice->currentRoll];
 }

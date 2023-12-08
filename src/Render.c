@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <Board.h>
 #include <Render.h>
+#include <Move.h>
 #include <State.h>
 
 
@@ -18,6 +19,8 @@ void pair_init() {
     init_pair(CPWPS, COLOR_YELLOW, COLOR_WHITE);
     init_pair(CPRPT, COLOR_RED, COLOR_GREEN);
     init_pair(CPWPT, COLOR_YELLOW, COLOR_GREEN);
+    init_pair(CPRPPT, COLOR_RED, COLOR_CYAN);
+    init_pair(CPWPPT, COLOR_YELLOW, COLOR_CYAN);
 }
 
 WINDOW *win_init() {
@@ -89,18 +92,37 @@ int drawppic(Ctx *ctx, BoardPoint *bp, int p, int stp, int *y, int x) {
     return i;
 }
 
+int colorTarget(Ctx *ctx, int pt) {
+    BoardPoint bp = ctx->b->pts[pt];
+    int tgc = -1;
+    if (!ctx->gs->curmove) return -1;
+    else if (ctx->gs->curmove->to == pt) {
+        tgc = COLOR_PAIR(bp.player == PR ? CPRPT : CPWPT);
+    } else {
+        MovePos *move = &ctx->gs->mvs.avalmvs[ctx->gs->curpiece];
+        ListNode *node = move->mvs->root;
+        while (node != NULL) {
+            if (((Move *) node->data)->to == pt) {
+                tgc = COLOR_PAIR(bp.player == PR ? CPRPPT : CPWPPT);
+                break;
+            }
+            node = node->next;
+        }
+    }
+    tgc != -1 && wattron(ctx->wbinf->handle, tgc);
+    return tgc;
+}
+
 // draw board pt from given pt
 void drwp(Ctx *ctx, int pt, int x, int y) {
     BoardPoint bp = ctx->b->pts[pt];
     char *empty = pt % 2 ? "^^^" : ":::";
     int stp = pt > 11 ? 1 : -1;
     int i = drawppic(ctx, &bp, pt, stp, &y, x);
-    int tgc = bp.player == PR ? COLOR_PAIR(CPRPT)
-                              : COLOR_PAIR(CPWPT);
-    ctx->gs->mvs.mvc > 0 && GMFRMPIC(ctx->gs).to == pt && wattron(ctx->wbinf->handle, tgc);
+    int tgc = colorTarget(ctx, pt);
     for (; i < 6; i++) {
         mvwprintw(ctx->wbinf->handle, y + (i * stp), x, empty);
-        wattroff(ctx->wbinf->handle, tgc);
+        tgc != -1 && wattroff(ctx->wbinf->handle, tgc);
     }
 }
 
@@ -141,7 +163,7 @@ void drwms(Ctx *ctx) {
 }
 
 // draw current player move
-void drawp(Ctx *ctx) {
+void drwpl(Ctx *ctx) {
     if (ctx->gs->player != 0) {
         wprintw(ctx->wsinf->handle, "Player: %s ",
                 ctx->gs->player == PW ? "White" : "Red");
@@ -150,7 +172,7 @@ void drawp(Ctx *ctx) {
 
 // draw value of a single dice
 void drwdval(Ctx *ctx, int it) {
-    if (it == ctx->gs->dice->currentRoll) waddch(ctx->wsinf->handle, 'c');
+    if (!ctx->gs->dice->rolls[it].enabled) return;
     wprintw(ctx->wsinf->handle, "%d ",
             ctx->gs->dice->rolls[it]);
 }
@@ -159,7 +181,7 @@ void drwdval(Ctx *ctx, int it) {
 void drwd(Ctx *ctx) {
     wclear(ctx->wsinf->handle);
     drwms(ctx);
-    drawp(ctx);
+    drwpl(ctx);
     if (ctx->gs->state > DICE) {
         for (int i = 0; i < ctx->gs->dice->rollsCount; i++) {
             USE_COLOR(i == ctx->gs->dice->currentRoll, CPRPS,
@@ -181,7 +203,7 @@ WindowInfo *crwin(int width, int height, bool root, int x, int y) {
 }
 
 
-void initWindows(Ctx *ctx) {
+void initwins(Ctx *ctx) {
     ctx->wminf = crwin(100, 40, true, 0, 0);
     ctx->wbinf = crwin(
             ctx->wminf->w - 3,
@@ -202,7 +224,7 @@ Ctx *getctx() {
 Ctx *CtxInit() {
     Ctx *ctx = getctx();
     ctx->curwin = MAIN_WINDOW;
-    initWindows(ctx);
+    initwins(ctx);
     ctx->b = boardInit();
     ctx->gs = gameStateInit();
     drwmenu(ctx);

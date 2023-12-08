@@ -12,7 +12,7 @@
 #define SELECTED_BAR 0
 
 #define GMFRMPIC(gst) \
-    gst->mvs.avalmvs[gst->curpiece == SELECTED_BAR ? 0 : gst->curpiece]
+    gst->curmove
 
 typedef struct Board Board;
 typedef struct History History;
@@ -24,8 +24,14 @@ enum State {
     SELECT,
 };
 
+
+typedef struct Roll {
+    int roll;
+    bool enabled;
+} Roll;
+
 typedef struct Dice {
-    int *rolls;
+    Roll *rolls;
     int rollsCount;
     int currentRoll;
 } Dice;
@@ -34,6 +40,8 @@ typedef struct GameState {
     enum State state;
     int player;
     int curpiece;
+    Move *curmove;
+    bool selpic;
     bool update;
     int sleep;
     Dice *dice;
@@ -45,6 +53,7 @@ typedef struct GameState {
 void transitionState(GameState *gameState, Board *board);
 
 int getCurrentRoll(GameState *gameState);
+
 
 GameState *gameStateInit();
 
