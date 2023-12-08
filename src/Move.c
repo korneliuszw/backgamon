@@ -25,15 +25,20 @@ void selectPiece(GameState *gs, int dir) {
     }
 }
 
+#define GET_ROOT(tree) tree == NULL ? NULL : tree->root
+
 void selectMove(GameState *gs, int dir) {
     if (gs->curpiece < 0) return;
-    ListNode *next = gs->mvs.avalmvs[gs->curpiece].mvs->root;
+    ListNode *next = GET_ROOT(gs->mvs.avalmvs[gs->curpiece].mvs);
     Move *newMove = gs->curmove;
+    int dst = 99;
     while (next != NULL) {
-        int curTo = ((Move *) next->data)->to;
-        if ((dir == DIRECTION_DOWN && newMove->to > curTo) || (dir == DIRECTION_UP && newMove->to < curTo)) {
+        int cto = ((Move *) next->data)->to;
+        int cdst = abs(gs->curmove->to - cto);
+        if (((dir == DIRECTION_DOWN && gs->curmove->to > cto) ||
+             (dir == DIRECTION_UP && gs->curmove->to < cto)) && cdst < dst) {
             newMove = next->data;
-            break;
+            dst = cdst;
         }
         next = next->next;
     }
@@ -100,9 +105,11 @@ void clrmvs(Moves *mvs) {
             next = next->next;
         }
         listDestroy(mvs->avalmvs[i].mvs);
+        mvs->avalmvs[i].mvs = NULL;
     }
     mvs->mvc = 0;
     free(mvs->avalmvs);
+    mvs->avalmvs = NULL;
 }
 
 void pickDefaultMove(GameState *gs) {
@@ -118,11 +125,14 @@ void pickDefaultMove(GameState *gs) {
 void moveOutOfBand(GameState *gs, Board *brd) {
     gs->curpiece = gs->player == PR ? BOARD_POINTS - 1 : 0;
     int from = gs->player == PR ? BOARD_POINTS : -1;
-    int currentMove = gs->dice->rolls[0].roll * MOVE_STEP(gs->player);
+    Roll *roll = gs->dice->rolls;
+    while (!roll->enabled) roll += 1;
+    int currentMove = roll->roll * MOVE_STEP(gs->player);
     if (canMoveToDestination(brd, gs->player, from + currentMove)) {
-        pushMove(gs, from, from + currentMove, gs->dice->rolls);
+        gs->curmove = pushMove(gs, 0, from + currentMove, roll);
+        gs->curmove->from = from;
+        gs->mvs.mvc = 1;
     }
-
 }
 
 void getMoves(GameState *gameState, Board *board) {
@@ -132,10 +142,12 @@ void getMoves(GameState *gameState, Board *board) {
     gameState->curpiece = -1;
     if (board->bars[gameState->player - 1].pieces > 0)
         moveOutOfBand(gameState, board);
-    else calcMoves(gameState, board);
+    else {
+        calcMoves(gameState, board);
+        pickDefaultMove(gameState);
+    }
     if (mvs->mvc == 0)
         transitionState(gameState, board);
-    pickDefaultMove(gameState);
 }
 
 List *listInit() {

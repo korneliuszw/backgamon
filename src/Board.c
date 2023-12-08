@@ -71,16 +71,23 @@ void movePieceOut(Board *board, int player) {
     } else board->rempic[player - 1]--;
 }
 
+#define IS_BAND_MOVE(b, p) (b)->bars[p - 1].pieces > 0
 
-bool movePiece(Board *board, int player, int from, int to) {
-    if (to == (player == PR ? BOARD_POINTS : -1)) movePieceOut(board, player);
-    if (board->pts[to].player != player) {
-        board->pts[to].pieces = 0;
-        board->bars[board->pts[to].player - 1].pieces++;
+void movePieceOutOfBand(Board *board, int player, Move *mv) {
+    board->bars[player - 1].pieces--;
+}
+
+bool movePiece(Board *board, int player, Move *mv) {
+    if (mv->to == (player == PR ? BOARD_POINTS : -1)) movePieceOut(board, player);
+    if (IS_BAND_MOVE(board, player)) movePieceOutOfBand(board, player, mv);
+    else board->pts[mv->from].pieces = MAX(0, board->pts[mv->from].pieces - 1));
+    if (board->pts[mv->to].player != player && board->pts[mv->to].player > 0) {
+        if (board->pts[mv->to].pieces > 0)
+            board->bars[board->pts[mv->to].player - 1].pieces++;
+        board->pts[mv->to].pieces = 0;
     }
-    board->pts[from].pieces = MAX(0, board->pts[from].pieces - 1));
-    board->pts[to].pieces++;
-    board->pts[to].player = player;
+    board->pts[mv->to].pieces++;
+    board->pts[mv->to].player = player;
     return true;
 }
 

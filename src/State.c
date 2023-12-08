@@ -7,6 +7,7 @@
 #include <State.h>
 #include <Board.h>
 #include <Render.h>
+#include <string.h>
 
 void transitionPickPlayer(GameState *gameState) {
     do {
@@ -18,6 +19,7 @@ void transitionPickPlayer(GameState *gameState) {
 
 void transitionDiceRoll(GameState *gameState, Board *board) {
     gameState->dice->currentRoll = 0;
+    if (gameState->dice->rolls != NULL) free(gameState->dice->rolls);
     gameState->dice->rolls = rollDice(&gameState->dice->rollsCount);
     getMoves(gameState, board);
 }
@@ -36,11 +38,25 @@ void transitionMove(GameState *gameState, Board *board) {
     if (gameState->mvs.mvc > 0) {
         start_history_entry(&gameState->history, board, GMFRMPIC(gameState), gameState->dice);
         movePiece(board, gameState->player,
-                  GMFRMPIC(gameState)->from,
-                  GMFRMPIC(gameState)->to);
+                  GMFRMPIC(gameState));
         useDice(gameState);
         commit_history_entry(gameState->history, board, GMFRMPIC(gameState));
     }
+    BoardPoint *bp = malloc(sizeof(BoardPoint) * BOARD_POINTS);
+    memcpy(bp, &board->pts, sizeof(BoardPoint) * BOARD_POINTS);
+//    int p1 = board->bars[PR - 1].pieces, p2 = board->bars[PW - 1].pieces;
+//    for (int i = 0; i < BOARD_POINTS; i++) {
+//        if (board->pts[i].player == PW) {
+//            p2 += board->pts[i].pieces;
+//        } else if (board->pts[i].player == PR) {
+//            p1 += board->pts[i].pieces;
+//        }
+//    }
+//    if (p1 != 15 || p2 != 15) {
+//        // noop
+//        int t = 0 == 0;
+//        t + 1;
+//    }
     gameState->update = true;
     gameState->dice->currentRoll++;
     if (gameState->dice->currentRoll < gameState->dice->rollsCount) {

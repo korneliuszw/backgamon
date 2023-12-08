@@ -12,6 +12,7 @@
 #define BAR_POINT 36
 
 typedef struct Roll Roll;
+typedef struct Move Move;
 
 
 typedef struct BoardPoint {
@@ -39,7 +40,7 @@ bool areAllPiecesHome(Board *board, int player);
 // This function assumes rand is already seeded
 Roll *rollDice(int *moves);
 
-bool movePiece(Board *board, int player, int from, int to);
+bool movePiece(Board *board, int player, Move *mv);
 
 void movePieceOut(Board *board, int player);
 

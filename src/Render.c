@@ -100,7 +100,7 @@ int colorTarget(Ctx *ctx, int pt) {
         tgc = COLOR_PAIR(bp.player == PR ? CPRPT : CPWPT);
     } else {
         MovePos *move = &ctx->gs->mvs.avalmvs[ctx->gs->curpiece];
-        ListNode *node = move->mvs->root;
+        ListNode *node = move->mvs != NULL ? move->mvs->root : NULL;
         while (node != NULL) {
             if (((Move *) node->data)->to == pt) {
                 tgc = COLOR_PAIR(bp.player == PR ? CPRPPT : CPWPPT);
