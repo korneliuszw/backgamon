@@ -22,12 +22,23 @@ void transitionDiceRoll(GameState *gameState, Board *board) {
     getMoves(gameState, board);
 }
 
+void useDice(GameState *gs) {
+    ListNode *node = gs->curmove->dices->root;
+    while (node != NULL) {
+        Roll *roll = node->data;
+        roll->enabled = false;
+        node = node->next;
+    }
+
+}
+
 void transitionMove(GameState *gameState, Board *board) {
     if (gameState->mvs.mvc > 0) {
         start_history_entry(&gameState->history, board, GMFRMPIC(gameState), gameState->dice);
         movePiece(board, gameState->player,
                   GMFRMPIC(gameState)->from,
                   GMFRMPIC(gameState)->to);
+        useDice(gameState);
         commit_history_entry(gameState->history, board, GMFRMPIC(gameState));
     }
     gameState->update = true;

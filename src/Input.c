@@ -33,7 +33,11 @@ void handleMainWindowInput(int key, Ctx *Ctx) {
         }
         case KEY_UP:
         case KEY_DOWN: {
-            return selectPieceOrMove(Ctx->gs, Ctx->b, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
+            return selectPiece(Ctx->gs, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
+        }
+        case KEY_LEFT:
+        case KEY_RIGHT: {
+            return selectMove(Ctx->gs, key == KEY_LEFT ? DIRECTION_UP : DIRECTION_DOWN);
         }
         case 'b': {
             history_back(&Ctx->gs->history, Ctx->b, Ctx->gs);
@@ -42,9 +46,6 @@ void handleMainWindowInput(int key, Ctx *Ctx) {
         case 'n': {
             history_forward(&Ctx->gs->history, Ctx->b, Ctx->gs);
             return transitionState(Ctx->gs, Ctx->b);
-        }
-        case ' ' : {
-            return confSel(Ctx->gs);
         }
         case 't': {
             return toggleLeaderboard(Ctx);

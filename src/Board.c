@@ -71,6 +71,7 @@ void movePieceOut(Board *board, int player) {
     } else board->rempic[player - 1]--;
 }
 
+
 bool movePiece(Board *board, int player, int from, int to) {
     if (to == (player == PR ? BOARD_POINTS : -1)) movePieceOut(board, player);
     if (board->pts[to].player != player) {

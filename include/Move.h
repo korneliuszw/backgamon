@@ -47,11 +47,7 @@ void listDestroy(List *head);
 
 void selectPiece(GameState *gs, int dir);
 
-void selectPieceOrMove(GameState *gameState, Board *board, int direction);
-
 void selectMove(GameState *gameState, int direction);
-
-void confSel(GameState *gameState);
 
 void getMoves(GameState *, Board *);
 

@@ -12,11 +12,6 @@
 #define MOVE_STEP(player) ((player) == (PR) ? (-1) : (1))
 
 
-void selectPieceOrMove(GameState *gs, Board *brd, int dir) {
-    if (gs->selpic) selectMove(gs, dir);
-    else selectPiece(gs, dir);
-}
-
 void selectPiece(GameState *gs, int dir) {
     if (gs->curpiece < 0) return;
     int stp = dir == DIRECTION_DOWN ? -1 : 1;
@@ -38,10 +33,12 @@ void selectMove(GameState *gs, int dir) {
         int curTo = ((Move *) next->data)->to;
         if ((dir == DIRECTION_DOWN && newMove->to > curTo) || (dir == DIRECTION_UP && newMove->to < curTo)) {
             newMove = next->data;
+            break;
         }
         next = next->next;
     }
     gs->curmove = newMove;
+    gs->update = true;
 }
 
 Move *pushMove(GameState *gs, int from, int to, Roll *roll) {
@@ -65,7 +62,7 @@ void getMoveForDice(GameState *gs, Board *brd, int from, Roll *roll) {
 }
 
 void getMovesForMultipleDices(GameState *gs, Board *brd, int rollc, int acc, int from, Roll *roll) {
-    if (rollc == gs->dice->rollsCount - 1 || !roll->enabled) return;
+    if (rollc == gs->dice->rollsCount || !roll->enabled) return;
     int curacc = acc + roll->roll;
     if (acc != 0 && canMovePiece(brd, gs->player, from, from + MOVE_STEP(gs->player) * curacc)) {
         getMovesForMultipleDices(gs, brd, rollc + 1, curacc, from, roll);
@@ -74,7 +71,8 @@ void getMovesForMultipleDices(GameState *gs, Board *brd, int rollc, int acc, int
             listPush(move->dices, gs->dice->rolls + i);
     } else if (acc == 0) {
         while (!roll->enabled && rollc < gs->dice->rollsCount) rollc += 1;
-        getMovesForMultipleDices(gs, brd, rollc + 1, acc + roll->roll, from, roll + rollc);
+        roll = roll + rollc;
+        getMovesForMultipleDices(gs, brd, rollc + 1, acc + roll->roll, from, roll + 1);
     }
 }
 
@@ -169,9 +167,4 @@ void listDestroy(List *tree) {
         next = next->next;
         free(head);
     }
-}
-
-void confSel(GameState *gs) {
-    if (gs->curpiece < 0) return;
-    gs->selpic = !gs->selpic;
 }
