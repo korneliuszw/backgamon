@@ -48,7 +48,8 @@ typedef struct {
 
 enum CurWin {
     MAIN_WINDOW,
-    LEADER_WINDOW
+    LEADER_WINDOW,
+    SAVE_WINDOW
 };
 
 typedef struct Ctx {

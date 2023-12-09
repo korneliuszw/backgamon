@@ -5,10 +5,11 @@
 #include <Render.h>
 #include <State.h>
 #include <ncurses.h>
-
+#include <Save.h>
 #include <Move.h>
 #include <History.h>
 #include <Leaderboard.h>
+#include <ModalList.h>
 
 #define KEY_ENTER_KEYBOARD 13
 
@@ -16,12 +17,14 @@ void handleLeaderboardInput(int key, Ctx *Ctx) {
     switch (key) {
         case KEY_UP:
         case KEY_DOWN: {
-            return moveLeaderboardCursor(Ctx, key == KEY_UP ? -1 : 1);
+            return moveModalListCursor(Ctx, key == KEY_UP ? DIRECTION_UP : DIRECTION_DOWN);
         }
-        case KEY_ENTER_KEYBOARD:
+        case KEY_ENTER_KEYBOARD: {
+            return selectModalListEntry(Ctx);
+        }
         case 'q':
         case 't': {
-            return toggleLeaderboard(Ctx);
+            return toggleModalList(Ctx, Ctx->tmpmem);
         }
     }
 }
@@ -50,6 +53,12 @@ void handleMainWindowInput(int key, Ctx *Ctx) {
         case 't': {
             return toggleLeaderboard(Ctx);
         }
+        case 'l': {
+            return toggleSaveSelectMenu(Ctx);
+        }
+        case 's': {
+            return saveGame(Ctx);
+        }
         case 'q': {
             exit(0);
         }
@@ -61,7 +70,7 @@ void handleInput(Ctx *Ctx) {
     while ((key = getch()) != ERR) {
         if (Ctx->curwin == MAIN_WINDOW) {
             handleMainWindowInput(key, Ctx);
-        } else if (Ctx->curwin == LEADER_WINDOW) {
+        } else {
             handleLeaderboardInput(key, Ctx);
         }
     }

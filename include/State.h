@@ -41,19 +41,16 @@ typedef struct GameState {
     int player;
     int curpiece;
     Move *curmove;
-    bool selpic;
     bool update;
     int sleep;
     Dice *dice;
     Moves mvs;
     History *history;
+    long timestamp;
 } GameState;
 
 
 void transitionState(GameState *gameState, Board *board);
-
-int getCurrentRoll(GameState *gameState);
-
 
 GameState *gameStateInit();
 

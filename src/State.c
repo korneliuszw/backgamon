@@ -8,6 +8,7 @@
 #include <Board.h>
 #include <Render.h>
 #include <string.h>
+#include <time.h>
 
 void transitionPickPlayer(GameState *gameState) {
     do {
@@ -100,5 +101,6 @@ GameState *gameStateInit() {
     gameState->curpiece = -1;
     gameState->update = false;
     gameState->history = initHistory();
+    gameState->timestamp = time(NULL);
     return gameState;
 }

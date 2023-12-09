@@ -5,11 +5,7 @@
 #include <Leaderboard.h>
 #include <stdio.h>
 #include <Render.h>
-
-typedef struct LeaderboardState {
-    Leaderboard leaderboard;
-    int selectedEntry;
-} LeaderboardState;
+#include <ModalList.h>
 
 Leaderboard getLeaderboard() {
     Leaderboard leaderboard;
@@ -19,9 +15,10 @@ Leaderboard getLeaderboard() {
         return leaderboard;
     }
     while (!feof(file) && leaderboard.leaders < MAX_LEADERS) {
-        char name[100];
+        char *name = malloc(sizeof(char) * 20);
         int score;
-        fscanf(file, "%99s %d\n", name, &score);
+        fscanf(file, "%19s", name);
+        fscanf(file, "%d\n", &score);
         leaderboard.entries[leaderboard.leaders].name = name;
         leaderboard.entries[leaderboard.leaders].score = score;
         leaderboard.leaders++;
@@ -55,44 +52,32 @@ void saveResult(char *name, int score) {
     fclose(file);
 }
 
-void renderLeaderboard(WindowInfo *windowInfo, LeaderboardState *state) {
-    for (int i = 0; i < state->leaderboard.leaders; i++) {
-        USE_COLOR(i == state->selectedEntry, CPWPS, windowInfo->handle) {
-                mvwprintw(windowInfo->handle, i + 1, 1, "%d) %s %d", i, state->leaderboard.entries[i].name,
-                          state->leaderboard.entries[i].score);
-            }
-    }
-    wrefresh(windowInfo->handle);
+char selectLeaderboardEntry(Ctx *ctx, struct ModalListEntry *entry) {
+    return 0;
 }
 
-void moveLeaderboardCursor(Ctx *Ctx, int entry) {
-    LeaderboardState *state = (LeaderboardState *) Ctx->tmpmem;
-    if (entry > 0) {
-        state->selectedEntry = (state->selectedEntry + 1) % state->leaderboard.leaders;
+void initLeaderboardScreen(struct ModalList *list) {
+    Leaderboard ldb = getLeaderboard();
+    list->selected = 0;
+    list->entries = ldb.leaders;
+    list->onSelect = NULL;
+    list->list = malloc(sizeof(struct ModalListEntry) * ldb.leaders);
+    for (int i = 0; i < ldb.leaders; i++) {
+        char *text = malloc(sizeof(char) * 100);
+        snprintf(text, 100, "%d) %s: %d", i + 1, ldb.entries[i].name, ldb.entries[i].score);
+        list->list[i].data = NULL;
+        list->list[i].text = text;
+    }
+}
+
+void toggleLeaderboard(Ctx *ctx) {
+    struct ModalList *list;
+    if (ctx->curwin != LEADER_WINDOW) {
+        ctx->curwin = LEADER_WINDOW;
+        list = malloc(sizeof(struct ModalList));
+        initLeaderboardScreen(list);
     } else {
-        state->selectedEntry = (state->selectedEntry - 1 + state->leaderboard.leaders) %
-                               state->leaderboard.leaders;
+        list = ctx->tmpmem;
     }
-    renderLeaderboard(Ctx->wmodinf, Ctx->tmpmem);
-}
-
-void displayLeaderboard(Ctx *Ctx) {
-    Ctx->curwin = LEADER_WINDOW;
-    Ctx->wmodinf = crwin(10, 10, false, Ctx->wminf->w / 2 - 5,
-                         Ctx->wminf->h / 2 - 5);
-    Ctx->tmpmem = calloc(1, sizeof(LeaderboardState));
-    ((LeaderboardState *) (Ctx->tmpmem))->leaderboard = getLeaderboard();
-    renderLeaderboard(Ctx->wmodinf, Ctx->tmpmem);
-}
-
-void toggleLeaderboard(Ctx *Ctx) {
-    if (Ctx->curwin == LEADER_WINDOW) {
-        Ctx->curwin = MAIN_WINDOW;
-        free(Ctx->tmpmem);
-        delwin(Ctx->wmodinf->handle);
-        free(Ctx->wmodinf);
-        Ctx->wmodinf = NULL;
-    } else {
-        displayLeaderboard(Ctx);
-    }
+    toggleModalList(ctx, list);
 }
