@@ -7,6 +7,7 @@
 #include <Board.h>
 #include <Render.h>
 #include <State.h>
+#include <string.h>
 
 
 #define MOVE_STEP(player) ((player) == (PR) ? (-1) : (1))
@@ -67,7 +68,8 @@ void getMoveForDice(GameState *gs, Board *brd, int from, Roll *roll) {
 }
 
 void getMovesForMultipleDices(GameState *gs, Board *brd, int rollc, int acc, int from, Roll *roll) {
-    if (rollc == gs->dice->rollsCount || !roll->enabled) return;
+    if (rollc == gs->dice->rollsCount) return;
+    if (!roll->enabled) return getMovesForMultipleDices(gs, brd, rollc + 1, acc, from, roll + 1);
     int curacc = acc + roll->roll;
     if (acc != 0 && canMovePiece(brd, gs->player, from, from + MOVE_STEP(gs->player) * curacc)) {
         getMovesForMultipleDices(gs, brd, rollc + 1, curacc, from, roll);
@@ -75,11 +77,65 @@ void getMovesForMultipleDices(GameState *gs, Board *brd, int rollc, int acc, int
         for (int i = 0; i <= rollc - 1; i++)
             listPush(move->dices, gs->dice->rolls + i);
     } else if (acc == 0) {
-        while (!roll->enabled && rollc < gs->dice->rollsCount) rollc += 1;
-        roll = roll + rollc;
         getMovesForMultipleDices(gs, brd, rollc + 1, acc + roll->roll, from, roll + 1);
     }
 }
+
+void clrmvs(Moves *mvs) {
+    for (int i = 0; i < BOARD_POINTS; i++) {
+        if (mvs->avalmvs[i].mpc == 0) continue;
+        ListNode *next = mvs->avalmvs[i].mvs->root;
+        while (next != NULL) {
+            listDestroy(((Move *) next->data)->dices);
+            next = next->next;
+        }
+        listDestroy(mvs->avalmvs[i].mvs);
+        mvs->avalmvs[i].mvs = NULL;
+    }
+    mvs->mvc = 0;
+    free(mvs->avalmvs);
+    mvs->avalmvs = NULL;
+}
+
+List *filterAttacks(GameState *gs, Board *brd) {
+    List *attack = listInit();
+    for (int i = 0; i < BOARD_POINTS; i++) {
+        ListNode *next = GET_ROOT(gs->mvs.avalmvs[i].mvs);
+        while (next != NULL) {
+            Move *mv = next->data;
+            if (brd->pts[mv->to].player != gs->player && brd->pts[mv->to].player > 0) listPush(attack, next->data);
+            next = next->next;
+        }
+    }
+    return attack;
+}
+
+void removeAllButBest(GameState *gs, Move *best) {
+    Move *bestCp = malloc(sizeof(Move));
+    memcpy(bestCp, best, sizeof(Move));
+    List *bestDices = listCopy(best->dices);
+    bestCp->dices = bestDices;
+    clrmvs(&gs->mvs);
+    gs->mvs.avalmvs = calloc(sizeof(MovePos), BOARD_POINTS);
+    gs->mvs.avalmvs[bestCp->from].mpc = 1;
+    gs->mvs.avalmvs[bestCp->from].mvs = listInit();
+    listPush(gs->mvs.avalmvs[bestCp->from].mvs, bestCp);
+    gs->mvs.mvc = 1;
+}
+
+void forceBestAttack(GameState *gs, Board *brd) {
+    List *attack = filterAttacks(gs, brd);
+    if (attack->root == NULL) return;
+    ListNode *next = attack->root;
+    Move *best = next->data;
+    while (next != NULL) {
+        Move *cur = next->data;
+        if (gs->player == PW ? cur->to < best->to : cur->to > best->to) best = cur;
+        next = next->next;
+    }
+    removeAllButBest(gs, best);
+}
+
 
 void getMovesForAllDice(GameState *gs, Board *brd, int from) {
     getMovesForMultipleDices(gs, brd, 0, 0, from, gs->dice->rolls);
@@ -96,21 +152,6 @@ void calcMoves(GameState *gs, Board *brd) {
     }
 }
 
-void clrmvs(Moves *mvs) {
-    for (int i = 0; i < mvs->mvc; i++) {
-        if (mvs->avalmvs[i].mpc == 0) continue;
-        ListNode *next = mvs->avalmvs[i].mvs->root;
-        while (next != NULL) {
-            listDestroy(((Move *) next->data)->dices);
-            next = next->next;
-        }
-        listDestroy(mvs->avalmvs[i].mvs);
-        mvs->avalmvs[i].mvs = NULL;
-    }
-    mvs->mvc = 0;
-    free(mvs->avalmvs);
-    mvs->avalmvs = NULL;
-}
 
 void pickDefaultMove(GameState *gs) {
     for (int i = 0; i < BOARD_POINTS; i++) {
@@ -125,13 +166,18 @@ void pickDefaultMove(GameState *gs) {
 void moveOutOfBand(GameState *gs, Board *brd) {
     gs->curpiece = gs->player == PR ? BOARD_POINTS - 1 : 0;
     int from = gs->player == PR ? BOARD_POINTS : -1;
-    Roll *roll = gs->dice->rolls;
-    while (!roll->enabled) roll += 1;
-    int currentMove = roll->roll * MOVE_STEP(gs->player);
-    if (canMoveToDestination(brd, gs->player, from + currentMove)) {
-        gs->curmove = pushMove(gs, 0, from + currentMove, roll);
-        gs->curmove->from = from;
-        gs->mvs.mvc = 1;
+    gs->mvs.avalmvs[gs->curpiece].mvs = listInit();
+    for (int i = 0; i < gs->dice->rollsCount; i++) {
+        Roll *roll = gs->dice->rolls + i;
+        if (!roll->enabled) continue;
+        int currentMove = roll->roll * MOVE_STEP(gs->player);
+        if (canMoveToDestination(brd, gs->player, from + currentMove)) {
+            gs->curmove = pushMove(gs, gs->curpiece, from + currentMove, roll);
+            gs->curmove->from = from;
+            gs->mvs.mvc = 1;
+            gs->mvs.avalmvs[gs->curpiece].mpc += 1;
+            listPush(gs->mvs.avalmvs[gs->curpiece].mvs, gs->curmove);
+        }
     }
 }
 
@@ -140,14 +186,19 @@ void getMoves(GameState *gameState, Board *board) {
     if (mvs->avalmvs != NULL) clrmvs(mvs);
     mvs->avalmvs = calloc(sizeof(Moves), BOARD_POINTS);
     gameState->curpiece = -1;
-    if (board->bars[gameState->player - 1].pieces > 0)
+    if (board->bars[gameState->player - 1].pieces > 0) {
         moveOutOfBand(gameState, board);
-    else {
+        forceBestAttack(gameState, board);
+    } else {
         calcMoves(gameState, board);
+        forceBestAttack(gameState, board);
         pickDefaultMove(gameState);
     }
-    if (mvs->mvc == 0)
+    if (mvs->mvc == 0) {
+        gameState->player = gameState->player == PW ? PR : PW;
+        gameState->state = DICE;
         transitionState(gameState, board);
+    }
 }
 
 List *listInit() {
@@ -179,4 +230,14 @@ void listDestroy(List *tree) {
         next = next->next;
         free(head);
     }
+}
+
+List *listCopy(List *tree) {
+    List *copy = listInit();
+    ListNode *next = tree->root;
+    while (next != NULL) {
+        listPush(copy, next->data);
+        next = next->next;
+    }
+    return copy;
 }

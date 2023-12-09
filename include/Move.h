@@ -51,5 +51,7 @@ void selectMove(GameState *gameState, int direction);
 
 void getMoves(GameState *, Board *);
 
+List *listCopy(List *tree);
+
 
 #endif //BAKAGAMON_MOVE_H
