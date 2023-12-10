@@ -8,4 +8,4 @@ CPPFLAGS="-P" make
 CPPFLAGS="-P" make install
 cp build/include/ncurses/ncurses.h build/include/ncurses.h
 cd ..
-gcc -Incurces-6.4/build/include -Iinclude src/*.c -Lncurses-6.4/build/lib -lncurses -o backgammon
+gcc -Incurses-6.4/build/include -Iinclude src/*.c -Lncurses-6.4/build/lib -lncurses -o backgammon

@@ -31,3 +31,5 @@ move () {
 move save saves
 move hist history
 mv cmakelists.txt CMakeLists.txt
+mv include/Modallist.h include/ModalList.h
+mv src/Main.c src/main.c
