@@ -154,23 +154,9 @@ void forceBestAttack(GameState *gs, Board *brd) {
     removeAllButBest(gs, best);
 }
 
-void forceBestMove(GameState *gs, Board *brd) {
-    Move *best = NULL;
-    for (int i = 0; i < BOARD_POINTS; i++) {
-        if (gs->mvs.avalmvs[i].mpc == 0) continue;
-        ListNode *next = GET_ROOT(gs->mvs.avalmvs[i].mvs);
-        while (next != NULL) {
-            Move *cur = next->data;
-            if (best == NULL || (gs->player == PW ? cur->to < best->to : cur->to > best->to)) best = cur;
-            next = next->next;
-        }
-    }
-    removeAllButBest(gs, best);
-}
-
 void applyFilters(GameState *gs, Board *brd) {
     if (areAllPiecesHome(brd, gs->player)) {
-
+        return;
     } else
         forceBestAttack(gs, brd);
 }
@@ -225,10 +211,10 @@ void getMoves(GameState *gameState, Board *board) {
     gameState->curpiece = -1;
     if (board->bars[gameState->player - 1].pieces > 0) {
         moveOutOfBand(gameState, board);
-        forceBestAttack(gameState, board);
+        applyFilters(gameState, board);
     } else {
         calcMoves(gameState, board);
-        forceBestAttack(gameState, board);
+        applyFilters(gameState, board);
         pickDefaultMove(gameState);
     }
     if (mvs->mvc == 0) {

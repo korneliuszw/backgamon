@@ -69,7 +69,7 @@ void transitionMove(GameState *gameState, Board *board) {
         movePiece(board, gameState->player,
                   GMFRMPIC(gameState));
         useDice(gameState);
-        commit_history_entry(gameState->history, board, GMFRMPIC(gameState));
+        commit_history_entry(gameState->history, gameState->dice, board, GMFRMPIC(gameState));
     }
     if (board->winner) return processVictory(gameState, board);
     BoardPoint *bp = malloc(sizeof(BoardPoint) * BOARD_POINTS);

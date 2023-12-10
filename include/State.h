@@ -20,8 +20,6 @@ enum State {
     DICE,
     RESTORE,
     SELECT,
-    ASK_FOR_NAME,
-    WAIT_FOR_END,
     END
 };
 
