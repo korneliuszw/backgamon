@@ -65,7 +65,7 @@ void drwhelp(Ctx *Ctx) {
 
 // draw game name
 void drwname(Ctx *Ctx) {
-    mvwprintw(Ctx->wminf->handle, 1, 2, "Backgamon - Korneliusz Wojnicz ");
+    mvwprintw(Ctx->wminf->handle, 1, 2, "Backgamon - Korneliusz Wojnicz 198349");
     Ctx->wminf->update = true;
 }
 
