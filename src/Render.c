@@ -160,9 +160,20 @@ void drwbars(Ctx *ctx) {
     drwbarplayer(ctx, w, h + 2, PR);
 }
 
+void drwhome(Ctx *ctx) {
+    int h = ctx->wbinf->h / 2 - 1;
+    int w = ctx->wbinf->w - 10;
+    for (int i = PLAYERS; i > 0; i--) {
+        USE_COLOR(true, i == PR ? COLOR_PAIR(CPRP) : COLOR_PAIR(CPWP), ctx->wbinf->handle) {
+                mvwprintw(ctx->wbinf->handle, h + PLAYERS - i, w, "HOME: %02d", 15 - ctx->b->rempic[i - 1]);
+            }
+    }
+}
+
 // draw whole board
 void drwb(Ctx *Ctx) {
     drwbars(Ctx);
+    drwhome(Ctx);
     drwbp(Ctx, Ctx->wbinf->w - 30, Ctx->wbinf->h - 5);
     drwd(Ctx);
     Ctx->wbinf->update = true;
