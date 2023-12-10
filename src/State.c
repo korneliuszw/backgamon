@@ -97,45 +97,56 @@ void endGame() {
     CtxInit()->gs->playerInfo = oldState->playerInfo;
 }
 
-void checkStart(GameState *gameState, Board *board) {
+bool checkStart(GameState *gameState, Board *board) {
     if (gameState->state == START) {
         transitionPickPlayer(gameState);
         gameState->state = DICE;
+        return true;
     }
+    return false;
 }
 
-void checkRestore(GameState *gameState, Board *board) {
+bool checkRestore(GameState *gameState, Board *board) {
     if (gameState->state == RESTORE) {
         getMoves(gameState, board);
         gameState->state = SELECT;
+        return true;
     }
+    return false;
 }
 
-void checkDice(GameState *gameState, Board *board) {
+bool checkDice(GameState *gameState, Board *board) {
     if (gameState->state == DICE) {
         transitionDiceRoll(gameState, board);
         gameState->state = SELECT;
+        return true;
     }
+    return false;
 }
 
-void checkSelect(GameState *gameState, Board *board) {
+bool checkSelect(GameState *gameState, Board *board) {
     if (gameState->state == SELECT) {
-        return transitionMove(gameState, board);
+        transitionMove(gameState, board);
+        return true;
     }
+    return false;
 }
 
-void checkEnd(GameState *gameState, Board *board) {
+bool checkEnd(GameState *gameState, Board *board) {
     if (gameState->state == END) {
-        return endGame();
+        endGame();
+        return true;
     }
+    return false;
 }
 
 void transitionState(GameState *gameState, Board *board) {
-    checkStart(gameState, board);
-    checkRestore(gameState, board);
-    checkDice(gameState, board);
-    checkSelect(gameState, board);
-    checkEnd(gameState, board);
+    if (checkStart(gameState, board)
+        || checkDice(gameState, board)
+        || checkSelect(gameState, board)
+        || checkRestore(gameState, board)
+        || checkEnd(gameState, board))
+        0 == 0;
     gameState->update = true;
 }
 
