@@ -99,7 +99,7 @@ bool movePiece(Board *board, int player, Move *mv) {
 int calculateWinPoints(Board *board) {
     int otherPlayer = board->winner == PR ? PW : PR;
     int points = 1;
-    if (!areAllPiecesHome(board, otherPlayer)) points = 2;
+    if (board->rempic[otherPlayer - 1] >= 15) points = 2;
     if (board->bars[otherPlayer - 1].pieces > 0) points = 3;
     return points;
 }

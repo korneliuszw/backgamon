@@ -81,7 +81,7 @@ int drawppic(Ctx *ctx, BoardPoint *bp, int p, int stp, int *y, int x) {
     USE_COLOR(true, bp->player == PR ? COLOR_PAIR(CPRP) : COLOR_PAIR(CPWP), ctx->wbinf->handle) {
             mvwprintw(ctx->wbinf->handle, *y += (i * stp), x, "|=|");
             for (; i < bp->pieces; i++) {
-                USE_COLOR(i == bp->pieces - 1 && ctx->gs->curpiece == p,
+                USE_COLOR(i == bp->pieces - 1 && ctx->gs->curpiece == p && !ctx->gs->curmove->band,
                           bp->player == PR ? COLOR_PAIR(CPRPS)
                                            : COLOR_PAIR(CPWPS),
                           ctx->wbinf->handle) {
@@ -132,7 +132,7 @@ void drwbp(Ctx *Ctx, int x, int y) {
     for (int i = 0; i < BOARD_POINTS; i++) {
         if (i == 12) {
             y = 5;
-            x = 5;
+            x = 6;
             step = 5;
         }
         if (i == 6) {
@@ -145,8 +145,24 @@ void drwbp(Ctx *Ctx, int x, int y) {
     }
 }
 
+void drwbarplayer(Ctx *ctx, int x, int y, int p) {
+    int pieces = ctx->b->bars[p - 1].pieces;
+    USE_COLOR(p == ctx->gs->player && pieces > 0, p == PR ? COLOR_PAIR(CPRPS) : COLOR_PAIR(CPWPS), ctx->wbinf->handle) {
+            mvwprintw(ctx->wbinf->handle, y, x, "\ % 2d \ ", pieces);
+        }
+}
+
+void drwbars(Ctx *ctx) {
+    int h = ctx->wbinf->h / 2;
+    int w = 36;
+    drwbarplayer(ctx, w, h, PW);
+    mvwprintw(ctx->wbinf->handle, h + 1, w, "-BAR-", ctx->b->bars[PR - 1].pieces);
+    drwbarplayer(ctx, w, h + 2, PR);
+}
+
 // draw whole board
 void drwb(Ctx *Ctx) {
+    drwbars(Ctx);
     drwbp(Ctx, Ctx->wbinf->w - 30, Ctx->wbinf->h - 5);
     drwd(Ctx);
     Ctx->wbinf->update = true;
