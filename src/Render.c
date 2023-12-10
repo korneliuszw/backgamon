@@ -172,6 +172,7 @@ void drwhome(Ctx *ctx) {
 
 // draw whole board
 void drwb(Ctx *Ctx) {
+    werase(Ctx->wbinf->handle);
     drwbars(Ctx);
     drwhome(Ctx);
     drwbp(Ctx, Ctx->wbinf->w - 30, Ctx->wbinf->h - 5);
