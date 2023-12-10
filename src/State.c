@@ -123,8 +123,8 @@ GameState *gameStateInit() {
     gameState->curpiece = -1;
     gameState->curmove = NULL;
     gameState->update = false;
-    gameState->history = initHistory();
     gameState->timestamp = time(NULL);
+    gameState->history = initHistory();
     gameState->mvs.avalmvs = NULL;
     gameState->mvs.mvc = 0;
     gameState->playerInfo = calloc(sizeof(PlayerInfo), PLAYERS);
