@@ -22,6 +22,8 @@ typedef struct History {
     Move *move;
     BoardPoint *newToPoint;
     BoardPoint *prevToPoint;
+    BoardPoint *prevBands;
+    BoardPoint *nextBands;
     bool overwrite;
     int player;
     struct History *next;
@@ -37,8 +39,6 @@ void commit_history_entry(History *history, Dice *dice, Board *board, Move *move
 void history_back(History **history, Board *board, GameState *gameState);
 
 void history_forward(History **history, Board *board, GameState *gameState);
-
-void save_history(History *history);
 
 void load_history(History **history);
 

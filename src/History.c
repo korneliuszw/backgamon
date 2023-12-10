@@ -42,10 +42,19 @@ void initHistoryItem(History *history) {
     history->move = malloc(sizeof(Move));
     history->newToPoint = malloc(sizeof(BoardPoint));
     history->diceNext = malloc(sizeof(Dice));
+    history->prevBands = malloc(sizeof(BoardPoint) * 2);
+    history->nextBands = malloc(sizeof(BoardPoint) * 2);
 }
 
 void moveSerializer(FILE *handle, Move *move) {
     fprintf(handle, "MOVE %d %d %d\n", move->from, move->to, move->band);
+}
+
+void barsSerializer(FILE *handle, History *history) {
+    for (int i = 0; i < PLAYERS; i++)
+        fprintf(handle, "%d %d", &history->prevBands[i].pieces, &history->prevBands[i].player);
+    for (int i = 0; i < PLAYERS; i++)
+        fprintf(handle, "%d %d", &history->nextBands[i].pieces, &history->nextBands[i].player);
 }
 
 void saveHistory(History *history) {
@@ -56,6 +65,7 @@ void saveHistory(History *history) {
         fprintf(historyHandle, "NEWTO %d %d\n", current->newToPoint->pieces, current->newToPoint->player);
         fprintf(historyHandle, "PREVTO %d %d\n", current->newToPoint->pieces, current->newToPoint->player);
         moveSerializer(historyHandle, current->move);
+        barsSerializer(historyHandle, history);
         fprintf(historyHandle, "DICEOLD ");
         diceSerializer(historyHandle, current->dice);
         fprintf(historyHandle, "DICENEW ");
@@ -92,6 +102,7 @@ void start_history_entry(History **history, int player, Board *board, Move *move
     memcpy(newHistory->dice->rolls, dice->rolls, sizeof(Roll) * dice->rollsCount);
     memcpy(newHistory->prevToPoint, board->pts + move->to, sizeof(BoardPoint));
     memcpy(newHistory->move, move, sizeof(Move));
+    memcpy(newHistory->prevBands, board->bars, sizeof(BoardPoint) * 2);
     *history = newHistory;
 }
 
@@ -100,6 +111,7 @@ void commit_history_entry(History *history, Dice *dice, Board *board, Move *move
     memcpy(history->diceNext, dice, sizeof(Dice));
     history->diceNext->rolls = malloc(sizeof(Roll) * dice->rollsCount);
     memcpy(history->diceNext->rolls, dice->rolls, sizeof(Roll) * dice->rollsCount);
+    memcpy(history->nextBands, board->bars, sizeof(BoardPoint) * 2);
     saveOrOverwriteHistory(history);
 }
 
@@ -125,6 +137,7 @@ void history_back(History **history, Board *board, GameState *gameState) {
     if (historyItem->move->band) {
         board->bars[historyItem->player].pieces += 1;
     } else board->pts[historyItem->move->from].pieces += 1;
+    memcpy(board->bars, historyItem->prevBands, sizeof(BoardPoint) * 2);
     board->pts[historyItem->move->to] = *historyItem->prevToPoint;
     history_update(historyItem, board, gameState, false);
 }
@@ -137,10 +150,18 @@ void history_forward(History **history, Board *board, GameState *gameState) {
     if (historyItem->move->band) {
         board->bars[historyItem->player].pieces -= 1;
     } else board->pts[historyItem->move->from].pieces -= 1;
+    memcpy(board->bars, historyItem->nextBands, sizeof(BoardPoint) * 2);
     board->pts[historyItem->move->to] = *historyItem->newToPoint;
     history_update(*history, board, gameState, true);
 }
 
+
+void barsDeserializer(FILE *file, History *history) {
+    for (int i = 0; i < PLAYERS; i++)
+        fscanf(file, "%d %d\n", &history->prevBands[i].pieces, &history->prevBands[i].player);
+    for (int i = 0; i < PLAYERS; i++)
+        fscanf(file, "%d %d\n", &history->nextBands[i].pieces, &history->nextBands[i].player);
+}
 
 void historyDeserializer(FILE *file, History *history) {
     fscanf(file, "%d\n", &history->player);
@@ -149,6 +170,7 @@ void historyDeserializer(FILE *file, History *history) {
     fscanf(file, "NEWTO %d %d\n", &history->newToPoint->pieces, &history->newToPoint->player);
     fscanf(file, "PREVTO %d %d\n", &history->prevToPoint->pieces, &history->prevToPoint->player);
     fscanf(file, "MOVE %d %d %d\n", &history->move->from, &history->move->to, &history->move->band);
+    barsDeserializer(file, history);
     fscanf(file, "DICEOLD ");
     diceDeserializer(file, history->dice);
     fscanf(file, "DICENEW ");
