@@ -50,6 +50,6 @@ bool canMoveToDestination(Board *board, int player, int to);
 
 Board *boardInit();
 
-void winner(Board *board, int player);
+int calculateWinPoints(Board *board);
 
 #endif //BAKAGAMON_BOARD_H

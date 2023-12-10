@@ -8,6 +8,7 @@
 #include <Render.h>
 #include <Move.h>
 #include <State.h>
+#include <Leaderboard.h>
 
 
 void pair_init() {
@@ -66,6 +67,14 @@ void drwhelp(Ctx *Ctx) {
 void drwname(Ctx *Ctx) {
     mvwprintw(Ctx->wminf->handle, 1, 2, "Backgamon - Korneliusz Wojnicz ");
     Ctx->wminf->update = true;
+}
+
+void drwplscr(Ctx *ctx) {
+    for (int i = PLAYERS; i > 0; i--) {
+        PlayerInfo *playerInfo = ctx->gs->playerInfo + i - 1;
+        char *name = playerInfo->name == NULL ? i == PR ? "RED" : "WHITE" : playerInfo->name;
+        mvwprintw(ctx->wbinf->handle, 5 + PLAYERS - i, ctx->wbinf->w - 15, "% 5s: %d", name, playerInfo->score);
+    }
 }
 
 // draw static elements for menu
@@ -162,7 +171,7 @@ void drwbars(Ctx *ctx) {
 
 void drwhome(Ctx *ctx) {
     int h = ctx->wbinf->h / 2 - 1;
-    int w = ctx->wbinf->w - 10;
+    int w = ctx->wbinf->w - 15;
     for (int i = PLAYERS; i > 0; i--) {
         USE_COLOR(true, i == PR ? COLOR_PAIR(CPRP) : COLOR_PAIR(CPWP), ctx->wbinf->handle) {
                 mvwprintw(ctx->wbinf->handle, h + PLAYERS - i, w, "HOME: %02d", 15 - ctx->b->rempic[i - 1]);
@@ -177,6 +186,7 @@ void drwb(Ctx *Ctx) {
     drwhome(Ctx);
     drwbp(Ctx, Ctx->wbinf->w - 30, Ctx->wbinf->h - 5);
     drwd(Ctx);
+    drwplscr(Ctx);
     Ctx->wbinf->update = true;
 }
 

@@ -10,6 +10,7 @@
 Leaderboard getLeaderboard() {
     Leaderboard leaderboard;
     leaderboard.leaders = 0;
+    leaderboard.entries = malloc(sizeof(LeaderboardEntry) * MAX_LEADERS);
     FILE *file = fopen("states.b", "r");
     if (file == NULL) {
         return leaderboard;
@@ -27,21 +28,23 @@ Leaderboard getLeaderboard() {
 }
 
 void placeLeader(Leaderboard *leaderboard, char *name, int score) {
-    for (int i = 0; i < leaderboard->leaders; i++) {
+    for (int i = 0; i < MAX_LEADERS; i++) {
         if (leaderboard->entries[i].score < score) {
             for (int j = leaderboard->leaders - 1; j > i; j--) {
                 leaderboard->entries[j] = leaderboard->entries[j - 1];
             }
             leaderboard->entries[i].name = name;
             leaderboard->entries[i].score = score;
+            if (leaderboard->leaders < MAX_LEADERS)
+                leaderboard->leaders++;
             return;
         }
     }
 }
 
-void saveResult(char *name, int score) {
+void saveResult(PlayerInfo *pi) {
     Leaderboard leaderboard = getLeaderboard();
-    placeLeader(&leaderboard, name, score);
+    placeLeader(&leaderboard, pi->name, pi->score);
     FILE *file = fopen("states.b", "w");
     if (file == NULL) {
         return;
@@ -50,10 +53,6 @@ void saveResult(char *name, int score) {
         fprintf(file, "%s %d\n", leaderboard.entries[i].name, leaderboard.entries[i].score);
     }
     fclose(file);
-}
-
-char selectLeaderboardEntry(Ctx *ctx, struct ModalListEntry *entry) {
-    return 0;
 }
 
 void initLeaderboardScreen(struct ModalList *list) {

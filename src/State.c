@@ -9,6 +9,7 @@
 #include <Render.h>
 #include <string.h>
 #include <time.h>
+#include <Leaderboard.h>
 
 void transitionPickPlayer(GameState *gameState) {
     do {
@@ -36,6 +37,32 @@ void useDice(GameState *gs) {
 
 }
 
+char *askForName() {
+    char *name = malloc(sizeof(char) * 5);
+    mvwprintw(getctx()->wbinf->handle, 20, 1, "Enter your name: ");
+    wrefresh(getctx()->wbinf->handle);
+    noraw();
+    echo();
+    wgetnstr(getctx()->wbinf->handle, name, 5);
+    noecho();
+    raw();
+    if (*name == '\0') return askForName();
+    return name;
+}
+
+void processVictory(GameState *gameState, Board *board) {
+    PlayerInfo *playerInfo = gameState->playerInfo + board->winner - 1;
+    playerInfo->score += calculateWinPoints(board);
+    if (!playerInfo->name) {
+        playerInfo->name = askForName();
+    }
+    saveResult(playerInfo);
+    drwb(getctx());
+    mvwprintw(getctx()->wbinf->handle, 20, 1, "Press any key to continue...");
+    wrefresh(getctx()->wbinf->handle);
+    gameState->state = END;
+}
+
 void transitionMove(GameState *gameState, Board *board) {
     if (gameState->mvs.mvc > 0) {
         start_history_entry(&gameState->history, gameState->player, board, GMFRMPIC(gameState), gameState->dice);
@@ -44,21 +71,9 @@ void transitionMove(GameState *gameState, Board *board) {
         useDice(gameState);
         commit_history_entry(gameState->history, board, GMFRMPIC(gameState));
     }
+    if (board->winner) return processVictory(gameState, board);
     BoardPoint *bp = malloc(sizeof(BoardPoint) * BOARD_POINTS);
     memcpy(bp, &board->pts, sizeof(BoardPoint) * BOARD_POINTS);
-//    int p1 = board->bars[PR - 1].pieces, p2 = board->bars[PW - 1].pieces;
-//    for (int i = 0; i < BOARD_POINTS; i++) {
-//        if (board->pts[i].player == PW) {
-//            p2 += board->pts[i].pieces;
-//        } else if (board->pts[i].player == PR) {
-//            p1 += board->pts[i].pieces;
-//        }
-//    }
-//    if (p1 != 15 || p2 != 15) {
-//        // noop
-//        int t = 0 == 0;
-//        t + 1;
-//    }
     gameState->update = true;
     gameState->dice->currentRoll++;
     if (gameState->dice->currentRoll < gameState->dice->rollsCount) {
@@ -72,6 +87,11 @@ void transitionMove(GameState *gameState, Board *board) {
     }
 }
 
+void endGame() {
+    GameState *oldState = getctx()->gs;
+    CtxInit();
+    CtxInit()->gs->playerInfo = oldState->playerInfo;
+}
 
 void transitionState(GameState *gameState, Board *board) {
     switch (gameState->state) {
@@ -88,8 +108,9 @@ void transitionState(GameState *gameState, Board *board) {
             gameState->state = SELECT;
             break;
         case SELECT:
-            transitionMove(gameState, board);
-            break;
+            return transitionMove(gameState, board);
+        case END:
+            return endGame();
     }
     gameState->update = true;
 }
@@ -106,5 +127,6 @@ GameState *gameStateInit() {
     gameState->timestamp = time(NULL);
     gameState->mvs.avalmvs = NULL;
     gameState->mvs.mvc = 0;
+    gameState->playerInfo = calloc(sizeof(PlayerInfo), PLAYERS);
     return gameState;
 }

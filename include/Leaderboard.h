@@ -9,6 +9,11 @@
 
 typedef struct Ctx Ctx;
 
+typedef struct PlayerInfo {
+    char *name;
+    int score;
+} PlayerInfo;
+
 typedef struct LeaderboardEntry {
     char *name;
     int score;
@@ -16,17 +21,13 @@ typedef struct LeaderboardEntry {
 
 typedef struct Leaderboard {
     int leaders;
-    LeaderboardEntry entries[MAX_LEADERS];
+    LeaderboardEntry *entries;
 } Leaderboard;
 
 Leaderboard getLeaderboard();
 
-void saveResult(char *name, int score);
-
-void displayLeaderboard(Ctx *Ctx);
+void saveResult(PlayerInfo *playerInfo);
 
 void toggleLeaderboard(Ctx *Ctx);
-
-void moveLeaderboardCursor(Ctx *Ctx, int entry);
 
 #endif //BAKAGAMON_LEADERBOARD_H

@@ -9,8 +9,6 @@
 #include <stdbool.h>
 #include <Move.h>
 
-#define SELECTED_BAR 0
-
 #define GMFRMPIC(gst) \
     gst->curmove
 
@@ -22,6 +20,9 @@ enum State {
     DICE,
     RESTORE,
     SELECT,
+    ASK_FOR_NAME,
+    WAIT_FOR_END,
+    END
 };
 
 
@@ -35,6 +36,7 @@ typedef struct Dice {
     int rollsCount;
     int currentRoll;
 } Dice;
+typedef struct PlayerInfo PlayerInfo;
 
 typedef struct GameState {
     enum State state;
@@ -47,6 +49,7 @@ typedef struct GameState {
     Moves mvs;
     History *history;
     long timestamp;
+    PlayerInfo *playerInfo;
 } GameState;
 
 

@@ -14,7 +14,8 @@ void drawModalList(Ctx *ctx, struct ModalList *modalList) {
         if (idx >= modalList->entries) break;
         mvwprintw(ctx->wmodinf->handle, i + 1, 1, modalList->list[idx].text);
     }
-    wmove(ctx->wmodinf->handle, modalList->selected + 1, strlen(modalList->list[modalList->selected].text) + 1);
+    if (modalList->selected < modalList->entries)
+        wmove(ctx->wmodinf->handle, modalList->selected + 1, strlen(modalList->list[modalList->selected].text) + 1);
     wrefresh(ctx->wmodinf->handle);
 }
 

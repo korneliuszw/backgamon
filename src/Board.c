@@ -69,7 +69,7 @@ bool canMovePiece(Board *board, int player, int from, int to) {
 void movePieceOut(Board *board, int player, Move *mv) {
     board->pts[mv->from].pieces = MAX(0, board->pts[mv->from].pieces - 1));
     if (board->rempic[player - 1] == 1) {
-        winner(board, player);
+        board->winner = player;
     } else board->rempic[player - 1]--;
 }
 
