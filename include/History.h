@@ -40,4 +40,6 @@ void history_forward(History **history, Board *board, GameState *gameState);
 
 void save_history(History *history);
 
+void load_history(History **history);
+
 #endif //BAKAGAMON_HISTORY_H

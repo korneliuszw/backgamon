@@ -8,14 +8,19 @@
 #include <string.h>
 
 void drawModalList(Ctx *ctx, struct ModalList *modalList) {
-    int start = modalList->selected - (modalList->selected % ctx->wmodinf->h);
-    for (int i = 0; i < ctx->wmodinf->h; i++) {
+    werase(ctx->wmodinf->handle);
+    box(ctx->wmodinf->handle, 0, 0);
+    int start = modalList->selected - (modalList->selected % (ctx->wmodinf->h - 2));
+    int y = 0;
+    for (int i = 0; i < ctx->wmodinf->h - 2; i++) {
         int idx = start + i;
         if (idx >= modalList->entries) break;
+        if (idx == modalList->selected)
+            y = i + 1;
         mvwprintw(ctx->wmodinf->handle, i + 1, 1, modalList->list[idx].text);
     }
     if (modalList->selected < modalList->entries)
-        wmove(ctx->wmodinf->handle, modalList->selected + 1, strlen(modalList->list[modalList->selected].text) + 1);
+        wmove(ctx->wmodinf->handle, y, strlen(modalList->list[modalList->selected].text) + 1);
     wrefresh(ctx->wmodinf->handle);
 }
 
@@ -39,7 +44,6 @@ void toggleModalList(Ctx *ctx, struct ModalList *modalList) {
     if (ctx->wmodinf == NULL) {
         ctx->wmodinf = crwin(50, 10, false, ctx->wminf->w / 2 - 5,
                              ctx->wminf->h / 2 - 5);
-        box(ctx->wmodinf->handle, 0, 0);
         drawModalList(ctx, modalList);
         ctx->tmpmem = modalList;
     } else {

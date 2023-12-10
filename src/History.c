@@ -9,15 +9,22 @@
 #include <Render.h>
 #include <string.h>
 #include <Save.h>
+#include <unistd.h>
+
+char *fileName() {
+    char *path = calloc(sizeof(char), 50);
+    sprintf(path, "history/%ld.hist", getctx()->gs->timestamp);
+    return path;
+}
 
 FILE *openHistoryFile(bool append) {
     createFolder("history");
-    char path[50];
-    sprintf(path, "history/%ld.hist", getctx()->gs->timestamp);
+    char *path = fileName();
     FILE *file = fopen(path, !append ? "w+" : "a+");
     if (file == NULL && append) {
         file = fopen(path, "w+");
     }
+    free(path);
     return file;
 }
 
@@ -33,6 +40,8 @@ void initHistoryItem(History *history) {
     history->prevToPoint = malloc(sizeof(BoardPoint));
     history->dice = malloc(sizeof(Dice));
     history->move = malloc(sizeof(Move));
+    history->newToPoint = malloc(sizeof(BoardPoint));
+    history->diceNext = malloc(sizeof(Dice));
 }
 
 void moveSerializer(FILE *handle, Move *move) {
@@ -87,9 +96,7 @@ void start_history_entry(History **history, int player, Board *board, Move *move
 }
 
 void commit_history_entry(History *history, Dice *dice, Board *board, Move *move) {
-    history->newToPoint = malloc(sizeof(BoardPoint));
     memcpy(history->newToPoint, board->pts + move->to, sizeof(BoardPoint));
-    history->diceNext = malloc(sizeof(Dice));
     memcpy(history->diceNext, dice, sizeof(Dice));
     history->diceNext->rolls = malloc(sizeof(Roll) * dice->rollsCount);
     memcpy(history->diceNext->rolls, dice->rolls, sizeof(Roll) * dice->rollsCount);
@@ -132,4 +139,38 @@ void history_forward(History **history, Board *board, GameState *gameState) {
     } else board->pts[historyItem->move->from].pieces -= 1;
     board->pts[historyItem->move->to] = *historyItem->newToPoint;
     history_update(*history, board, gameState, true);
+}
+
+
+void historyDeserializer(FILE *file, History *history) {
+    fscanf(file, "%d\n", &history->player);
+    history->newToPoint = malloc(sizeof(BoardPoint));
+    history->prevToPoint = malloc(sizeof(BoardPoint));
+    fscanf(file, "NEWTO %d %d\n", &history->newToPoint->pieces, &history->newToPoint->player);
+    fscanf(file, "PREVTO %d %d\n", &history->prevToPoint->pieces, &history->prevToPoint->player);
+    fscanf(file, "MOVE %d %d %d\n", &history->move->from, &history->move->to, &history->move->band);
+    fscanf(file, "DICEOLD ");
+    diceDeserializer(file, history->dice);
+    fscanf(file, "DICENEW ");
+    diceDeserializer(file, history->diceNext);
+}
+
+void load_history(History **history) {
+    char *path = fileName();
+    // TODO: Windows support
+    if (access(path, F_OK) == -1) {
+        return free(path);
+    }
+    FILE *historyHandle = fopen(path, "r");
+    free(path);
+    History *current = *history;
+    while (!feof(historyHandle)) {
+        current->next = malloc(sizeof(History));
+        initHistoryItem(current->next);
+        historyDeserializer(historyHandle, current->next);
+        current->next->prev = current;
+        current = current->next;
+        *history = current;
+    }
+
 }

@@ -94,6 +94,7 @@ void diceSerializer(FILE *file, Dice *dice) {
 void stateSerializer(FILE *file, GameState *gameState) {
     fprintf(file, "STATE: %s\n", stateEnumStringifier(gameState->state));
     fprintf(file, "PLAYER: %d\n", gameState->player);
+    fprintf(file, "TIMESTAMP: %ld\n", gameState->timestamp);
     diceSerializer(file, gameState->dice);
 }
 
@@ -149,6 +150,7 @@ enum State stateEnumDeserializer(FILE *file) {
 void stateDeserializer(FILE *file, GameState *gameState) {
     gameState->state = stateEnumDeserializer(file);
     fscanf(file, "PLAYER: %d\n", &gameState->player);
+    fscanf(file, "TIMESTAMP: %ld\n", &gameState->timestamp);
     diceDeserializer(file, gameState->dice);
 }
 
@@ -160,6 +162,7 @@ void loadGame(Ctx *ctx, char *filename) {
     ctx->gs = gameStateInit();
     boardDeserializer(file, ctx->b);
     stateDeserializer(file, ctx->gs);
+    load_history(&ctx->gs->history);
     transitionState(ctx->gs, ctx->b);
 }
 
