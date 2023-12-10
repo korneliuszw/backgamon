@@ -63,15 +63,7 @@ void processVictory(GameState *gameState, Board *board) {
     gameState->state = END;
 }
 
-void transitionMove(GameState *gameState, Board *board) {
-    if (gameState->mvs.mvc > 0) {
-        start_history_entry(&gameState->history, gameState->player, board, GMFRMPIC(gameState), gameState->dice);
-        movePiece(board, gameState->player,
-                  GMFRMPIC(gameState));
-        useDice(gameState);
-        commit_history_entry(gameState->history, gameState->dice, board, GMFRMPIC(gameState));
-    }
-    if (board->winner) return processVictory(gameState, board);
+void finalizeMove(GameState *gameState, Board *board) {
     BoardPoint *bp = malloc(sizeof(BoardPoint) * BOARD_POINTS);
     memcpy(bp, &board->pts, sizeof(BoardPoint) * BOARD_POINTS);
     gameState->update = true;
@@ -87,31 +79,63 @@ void transitionMove(GameState *gameState, Board *board) {
     }
 }
 
+void transitionMove(GameState *gameState, Board *board) {
+    if (gameState->mvs.mvc > 0) {
+        startHistoryEntry(&gameState->history, gameState->player, board, GMFRMPIC(gameState), gameState->dice);
+        movePiece(board, gameState->player,
+                  GMFRMPIC(gameState));
+        useDice(gameState);
+        commitHistoryEntry(gameState->history, gameState->dice, board, GMFRMPIC(gameState));
+    }
+    if (board->winner) return processVictory(gameState, board);
+    finalizeMove(gameState, board);
+}
+
 void endGame() {
     GameState *oldState = getctx()->gs;
     CtxInit();
     CtxInit()->gs->playerInfo = oldState->playerInfo;
 }
 
-void transitionState(GameState *gameState, Board *board) {
-    switch (gameState->state) {
-        case START:
-            transitionPickPlayer(gameState);
-            gameState->state = DICE;
-            break;
-        case DICE:
-            transitionDiceRoll(gameState, board);
-            gameState->state = SELECT;
-            break;
-        case RESTORE:
-            getMoves(gameState, board);
-            gameState->state = SELECT;
-            break;
-        case SELECT:
-            return transitionMove(gameState, board);
-        case END:
-            return endGame();
+void checkStart(GameState *gameState, Board *board) {
+    if (gameState->state == START) {
+        transitionPickPlayer(gameState);
+        gameState->state = DICE;
     }
+}
+
+void checkRestore(GameState *gameState, Board *board) {
+    if (gameState->state == RESTORE) {
+        getMoves(gameState, board);
+        gameState->state = SELECT;
+    }
+}
+
+void checkDice(GameState *gameState, Board *board) {
+    if (gameState->state == DICE) {
+        transitionDiceRoll(gameState, board);
+        gameState->state = SELECT;
+    }
+}
+
+void checkSelect(GameState *gameState, Board *board) {
+    if (gameState->state == SELECT) {
+        return transitionMove(gameState, board);
+    }
+}
+
+void checkEnd(GameState *gameState, Board *board) {
+    if (gameState->state == END) {
+        return endGame();
+    }
+}
+
+void transitionState(GameState *gameState, Board *board) {
+    checkStart(gameState, board);
+    checkRestore(gameState, board);
+    checkDice(gameState, board);
+    checkSelect(gameState, board);
+    checkEnd(gameState, board);
     gameState->update = true;
 }
 

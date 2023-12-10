@@ -32,14 +32,14 @@ typedef struct History {
 
 History *initHistory();
 
-void start_history_entry(History **history, int player, Board *board, Move *move, Dice *dice);
+void startHistoryEntry(History **hst, int player, Board *brd, Move *mv, Dice *dice);
 
-void commit_history_entry(History *history, Dice *dice, Board *board, Move *move);
+void commitHistoryEntry(History *history, Dice *dice, Board *board, Move *move);
 
-void history_back(History **history, Board *board, GameState *gameState);
+void historyBack(History **history, Board *board, GameState *gameState);
 
-void history_forward(History **history, Board *board, GameState *gameState);
+void historyForward(History **history, Board *board, GameState *gameState);
 
-void load_history(History **history);
+void loadHistory(History **history);
 
 #endif //BAKAGAMON_HISTORY_H

@@ -43,10 +43,10 @@ void handleMainWindowInput(int key, Ctx *Ctx) {
             return selectMove(Ctx->gs, key == KEY_LEFT ? DIRECTION_UP : DIRECTION_DOWN);
         }
         case 'b': {
-            return history_back(&Ctx->gs->history, Ctx->b, Ctx->gs);
+            return historyBack(&Ctx->gs->history, Ctx->b, Ctx->gs);
         }
         case 'n': {
-            return history_forward(&Ctx->gs->history, Ctx->b, Ctx->gs);
+            return historyForward(&Ctx->gs->history, Ctx->b, Ctx->gs);
         }
         case 't': {
             return toggleLeaderboard(Ctx);

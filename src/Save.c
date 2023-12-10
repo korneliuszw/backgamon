@@ -162,7 +162,7 @@ void loadGame(Ctx *ctx, char *filename) {
     ctx->gs = gameStateInit();
     boardDeserializer(file, ctx->b);
     stateDeserializer(file, ctx->gs);
-    load_history(&ctx->gs->history);
+    loadHistory(&ctx->gs->history);
     transitionState(ctx->gs, ctx->b);
 }
 

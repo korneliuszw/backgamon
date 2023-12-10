@@ -17,7 +17,7 @@ char *fileName() {
     return path;
 }
 
-FILE *openHistoryFile(bool append) {
+FILE *openHist(bool append) {
     createFolder("history");
     char *path = fileName();
     FILE *file = fopen(path, !append ? "w+" : "a+");
@@ -57,20 +57,24 @@ void barsSerializer(FILE *handle, History *history) {
         fprintf(handle, "%d %d", &history->nextBands[i].pieces, &history->nextBands[i].player);
 }
 
-void saveHistory(History *history) {
-    History *current = history;
-    FILE *historyHandle = openHistoryFile(current->next == NULL);
-    while (current) {
-        fprintf(historyHandle, "%d\n", current->player);
-        fprintf(historyHandle, "NEWTO %d %d\n", current->newToPoint->pieces, current->newToPoint->player);
-        fprintf(historyHandle, "PREVTO %d %d\n", current->newToPoint->pieces, current->newToPoint->player);
-        moveSerializer(historyHandle, current->move);
-        barsSerializer(historyHandle, history);
+void pointSerializer(FILE *handle, History *cur) {
+    fprintf(handle, "NEWTO %d %d\n", cur->newToPoint->pieces, cur->newToPoint->player);
+    fprintf(handle, "PREVTO %d %d\n", cur->newToPoint->pieces, cur->newToPoint->player);
+}
+
+void saveHistory(History *hst) {
+    History *cur = hst;
+    FILE *historyHandle = openHist(cur->next == NULL);
+    while (cur) {
+        fprintf(historyHandle, "%d\n", cur->player);
+        pointSerializer(historyHandle, cur);
+        moveSerializer(historyHandle, cur->move);
+        barsSerializer(historyHandle, hst);
         fprintf(historyHandle, "DICEOLD ");
-        diceSerializer(historyHandle, current->dice);
+        diceSerializer(historyHandle, cur->dice);
         fprintf(historyHandle, "DICENEW ");
-        diceSerializer(historyHandle, current->diceNext);
-        current = current->next;
+        diceSerializer(historyHandle, cur->diceNext);
+        cur = cur->next;
     }
     fclose(historyHandle);
 }
@@ -84,29 +88,33 @@ void saveOrOverwriteHistory(History *history) {
     saveHistory(history);
 }
 
-void start_history_entry(History **history, int player, Board *board, Move *move, Dice *dice) {
-    // we are already back in time and we are going to override it!
-    History *newHistory = (History *) malloc(sizeof(History));
-    initHistoryItem(newHistory);
-    if ((*history)->next) {
-        free((*history)->next);
-        (*history)->next = NULL;
-        newHistory->overwrite = true;
-    }
-    newHistory->prev = *history;
-    (*history)->next = newHistory;
-    newHistory->next = NULL;
-    newHistory->player = player;
-    memcpy(newHistory->dice, dice, sizeof(Dice));
-    newHistory->dice->rolls = malloc(sizeof(Roll) * dice->rollsCount);
-    memcpy(newHistory->dice->rolls, dice->rolls, sizeof(Roll) * dice->rollsCount);
-    memcpy(newHistory->prevToPoint, board->pts + move->to, sizeof(BoardPoint));
-    memcpy(newHistory->move, move, sizeof(Move));
-    memcpy(newHistory->prevBands, board->bars, sizeof(BoardPoint) * 2);
-    *history = newHistory;
+void copyHistoryDice(History *new, Dice *dice) {
+    memcpy(new->dice, dice, sizeof(Dice));
+    new->dice->rolls = malloc(sizeof(Roll) * dice->rollsCount);
+    memcpy(new->dice->rolls, dice->rolls, sizeof(Roll) * dice->rollsCount);
 }
 
-void commit_history_entry(History *history, Dice *dice, Board *board, Move *move) {
+void startHistoryEntry(History **hst, int player, Board *brd, Move *mv, Dice *dice) {
+    // we are already back in time and we are going to override it!
+    History *new = (History *) malloc(sizeof(History));
+    initHistoryItem(new);
+    if ((*hst)->next) {
+        free((*hst)->next);
+        (*hst)->next = NULL;
+        new->overwrite = true;
+    }
+    new->prev = *hst;
+    (*hst)->next = new;
+    new->next = NULL;
+    new->player = player;
+    copyHistoryDice(new, dice);
+    memcpy(new->prevToPoint, brd->pts + mv->to, sizeof(BoardPoint));
+    memcpy(new->move, move, sizeof(Move));
+    memcpy(new->prevBands, brd->bars, sizeof(BoardPoint) * 2);
+    *hst = new;
+}
+
+void commitHistoryEntry(History *history, Dice *dice, Board *board, Move *move) {
     memcpy(history->newToPoint, board->pts + move->to, sizeof(BoardPoint));
     memcpy(history->diceNext, dice, sizeof(Dice));
     history->diceNext->rolls = malloc(sizeof(Roll) * dice->rollsCount);
@@ -130,7 +138,7 @@ void history_update(History *history, Board *board, GameState *gameState, bool f
     transitionState(gameState, board);
 }
 
-void history_back(History **history, Board *board, GameState *gameState) {
+void historyBack(History **history, Board *board, GameState *gameState) {
     History *historyItem = *history;
     if (historyItem->prev == NULL) return;
     *history = historyItem->prev;
@@ -142,7 +150,7 @@ void history_back(History **history, Board *board, GameState *gameState) {
     history_update(historyItem, board, gameState, false);
 }
 
-void history_forward(History **history, Board *board, GameState *gameState) {
+void historyForward(History **history, Board *board, GameState *gameState) {
     History *historyItem = *history;
     if (historyItem->next == NULL) return;
     *history = historyItem->next;
@@ -163,21 +171,25 @@ void barsDeserializer(FILE *file, History *history) {
         fscanf(file, "%d %d\n", &history->nextBands[i].pieces, &history->nextBands[i].player);
 }
 
-void historyDeserializer(FILE *file, History *history) {
-    fscanf(file, "%d\n", &history->player);
-    history->newToPoint = malloc(sizeof(BoardPoint));
-    history->prevToPoint = malloc(sizeof(BoardPoint));
-    fscanf(file, "NEWTO %d %d\n", &history->newToPoint->pieces, &history->newToPoint->player);
-    fscanf(file, "PREVTO %d %d\n", &history->prevToPoint->pieces, &history->prevToPoint->player);
-    fscanf(file, "MOVE %d %d %d\n", &history->move->from, &history->move->to, &history->move->band);
-    barsDeserializer(file, history);
-    fscanf(file, "DICEOLD ");
-    diceDeserializer(file, history->dice);
-    fscanf(file, "DICENEW ");
-    diceDeserializer(file, history->diceNext);
+void pointDeserializer(FILE *file, History *history) {
+    fscanf(file, "NEWTO %d %d\n", &history->prevToPoint->pieces, &history->prevToPoint->player);
+    fscanf(file, "PREVTO %d %d\n", &history->newToPoint->pieces, &history->newToPoint->player);
 }
 
-void load_history(History **history) {
+void historyDeserializer(FILE *file, History *hst) {
+    fscanf(file, "%d\n", &hst->player);
+    hst->newToPoint = malloc(sizeof(BoardPoint));
+    hst->prevToPoint = malloc(sizeof(BoardPoint));
+    pointDeserializer(file, hst);
+    fscanf(file, "MOVE %d %d %d\n", &hst->move->from, &hst->move->to, &hst->move->band);
+    barsDeserializer(file, hst);
+    fscanf(file, "DICEOLD ");
+    diceDeserializer(file, hst->dice);
+    fscanf(file, "DICENEW ");
+    diceDeserializer(file, hst->diceNext);
+}
+
+void loadHistory(History **history) {
     char *path = fileName();
     // TODO: Windows support
     if (access(path, F_OK) == -1) {

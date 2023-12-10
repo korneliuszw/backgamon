@@ -83,17 +83,17 @@ void getMoveForDice(GameState *gs, Board *brd, int from, Roll *roll) {
     }
 }
 
-void getMovesForMultipleDices(GameState *gs, Board *brd, int rollc, int acc, int from, Roll *roll) {
-    if (rollc == gs->dice->rollsCount) return;
-    if (!roll->enabled) return getMovesForMultipleDices(gs, brd, rollc + 1, acc, from, roll + 1);
+void getMovesForMultipleDices(GameState *gs, Board *brd, int rc, int acc, int fr, Roll *roll) {
+    if (rc == gs->dice->rollsCount) return;
+    if (!roll->enabled) return getMovesForMultipleDices(gs, brd, rc + 1, acc, fr, roll + 1);
     int curacc = acc + roll->roll;
-    if (acc != 0 && canMovePiece(brd, gs->player, from, from + MOVE_STEP(gs->player) * curacc)) {
-        getMovesForMultipleDices(gs, brd, rollc + 1, curacc, from, roll);
-        Move *move = pushMove(gs, from, from + MOVE_STEP(gs->player) * curacc, roll);
-        for (int i = 0; i <= rollc - 1; i++)
+    if (acc != 0 && canMovePiece(brd, gs->player, fr, fr + MOVE_STEP(gs->player) * curacc)) {
+        getMovesForMultipleDices(gs, brd, rc + 1, curacc, fr, roll);
+        Move *move = pushMove(gs, fr, fr + MOVE_STEP(gs->player) * curacc, roll);
+        for (int i = 0; i <= rc - 1; i++)
             listPush(move->dices, gs->dice->rolls + i);
     } else if (acc == 0) {
-        getMovesForMultipleDices(gs, brd, rollc + 1, acc + roll->roll, from, roll + 1);
+        getMovesForMultipleDices(gs, brd, rc + 1, acc + roll->roll, fr, roll + 1);
     }
 }
 
@@ -154,11 +154,40 @@ void forceBestAttack(GameState *gs, Board *brd) {
     removeAllButBest(gs, best);
 }
 
+List *filterRemovals(GameState *gs, Board *brd) {
+    List *list = listInit();
+    for (int i = 0; i < BOARD_POINTS; i++) {
+        ListNode *next = GET_ROOT(gs->mvs.avalmvs[i].mvs);
+        while (next != NULL) {
+            Move *mv = next->data;
+            if (brd->pts[mv->to].player == PR ? mv->to == -1 : mv->to == BOARD_POINTS)
+                listPush(list, next->data);
+            next = next->next;
+        }
+    }
+    return list;
+}
+
+bool forceBestRemoval(GameState *gs, Board *brd) {
+    List *removal = filterRemovals(gs, brd);
+    if (removal->root == NULL) return false;
+    ListNode *next = removal->root;
+    Move *best = next->data;
+    while (next != NULL) {
+        Move *cur = next->data;
+        if (gs->player == PW ? cur->from < best->from : cur->from > best->from) best = cur;
+        next = next->next;
+    }
+    removeAllButBest(gs, best);
+    return true;
+}
+
 void applyFilters(GameState *gs, Board *brd) {
     if (areAllPiecesHome(brd, gs->player)) {
-        return;
-    } else
-        forceBestAttack(gs, brd);
+        if (forceBestRemoval(gs, brd))
+            return;
+    }
+    forceBestAttack(gs, brd);
 }
 
 void getMovesForAllDice(GameState *gs, Board *brd, int from) {
@@ -170,6 +199,7 @@ void getMovesForAllDice(GameState *gs, Board *brd, int from) {
 void calcMoves(GameState *gs, Board *brd) {
     for (int i = 0; i < BOARD_POINTS; i++) {
         if (gs->player != brd->pts[i].player) continue;
+        if (brd->pts[i].pieces == 0) continue;
         gs->mvs.avalmvs[i].mpc = 0;
         getMovesForAllDice(gs, brd, i);
         if (gs->mvs.avalmvs[i].mpc) gs->mvs.mvc += 1;
