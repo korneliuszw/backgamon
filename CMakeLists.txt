@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.0)
 project(bakagamon C)
 
 set(CMAKE_C_STANDARD 17)
 
-find_package(curses REQUIRED)
+find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 include_directories("include" "src")
 file(GLOB srcs "src/*.c" "include/*.h")

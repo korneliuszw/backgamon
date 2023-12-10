@@ -60,6 +60,7 @@ void handleMainWindowInput(int key, Ctx *Ctx) {
             return saveGame(Ctx);
         }
         case 'q': {
+            endwin();
             exit(0);
         }
     }

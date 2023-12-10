@@ -16,9 +16,7 @@ typedef struct GameState GameState;
 typedef struct History {
     Dice *dice;
     Move *move;
-    BoardPoint *newFromPoint;
     BoardPoint *newToPoint;
-    BoardPoint *prevFromPoint;
     BoardPoint *prevToPoint;
     int player;
     struct History *next;
@@ -27,7 +25,7 @@ typedef struct History {
 
 History *initHistory();
 
-void start_history_entry(History **history, Board *board, Move *move, Dice *dice);
+void start_history_entry(History **history, int player, Board *board, Move *move, Dice *dice);
 
 void commit_history_entry(History *history, Board *board, Move *move);
 

@@ -1,6 +1,7 @@
 #include <Board.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 #include "State.h"
 
 
@@ -122,7 +123,7 @@ void seedRedPlayer(Board *board) {
 }
 
 Board *boardInit() {
-    sranddev();
+    srand(time(NULL));
     Board *board = malloc(sizeof(Board));
     board->winner = 0;
     for (int i = 0; i < BOARD_POINTS; i++) {

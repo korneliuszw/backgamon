@@ -29,10 +29,6 @@ int main() {
             wrefresh(Ctx->wbinf->handle);
             Ctx->wbinf->update = false;
         }
-        if (Ctx->gs->sleep > 0) {
-            Sleep(Ctx->gs->sleep);
-            Ctx->gs->sleep = 0;
-        }
     }
     return 0;
 }

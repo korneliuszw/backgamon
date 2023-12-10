@@ -7,9 +7,6 @@
 #include <ncurses.h>
 #include <string.h>
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 void drawModalList(Ctx *ctx, struct ModalList *modalList) {
     int start = modalList->selected - (modalList->selected % ctx->wmodinf->h);
     for (int i = 0; i < ctx->wmodinf->h; i++) {

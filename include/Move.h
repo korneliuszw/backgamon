@@ -8,6 +8,8 @@
 #define DIRECTION_UP 1
 #define DIRECTION_DOWN 0
 
+#include <stdbool.h>
+
 typedef struct GameState GameState;
 typedef struct Board Board;
 typedef struct Dice Dice;
@@ -25,6 +27,7 @@ typedef struct List {
 typedef struct Move {
     int to;
     int from;
+    bool band;
     List *dices;
 } Move;
 

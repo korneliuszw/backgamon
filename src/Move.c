@@ -8,6 +8,7 @@
 #include <Render.h>
 #include <State.h>
 #include <string.h>
+#include "ModalList.h"
 
 
 #define MOVE_STEP(player) ((player) == (PR) ? (-1) : (1))
@@ -114,13 +115,15 @@ void removeAllButBest(GameState *gs, Move *best) {
     Move *bestCp = malloc(sizeof(Move));
     memcpy(bestCp, best, sizeof(Move));
     List *bestDices = listCopy(best->dices);
-    bestCp->dices = bestDices;
     clrmvs(&gs->mvs);
+    bestCp->dices = bestDices;
     gs->mvs.avalmvs = calloc(sizeof(MovePos), BOARD_POINTS);
-    gs->mvs.avalmvs[bestCp->from].mpc = 1;
-    gs->mvs.avalmvs[bestCp->from].mvs = listInit();
-    listPush(gs->mvs.avalmvs[bestCp->from].mvs, bestCp);
+    int from = MIN(BOARD_POINTS - 1, MAX(0, bestCp->from));
+    gs->mvs.avalmvs[from].mpc = 1;
+    gs->mvs.avalmvs[from].mvs = listInit();
+    listPush(gs->mvs.avalmvs[from].mvs, bestCp);
     gs->mvs.mvc = 1;
+    gs->curmove = bestCp;
 }
 
 void forceBestAttack(GameState *gs, Board *brd) {
@@ -173,10 +176,9 @@ void moveOutOfBand(GameState *gs, Board *brd) {
         int currentMove = roll->roll * MOVE_STEP(gs->player);
         if (canMoveToDestination(brd, gs->player, from + currentMove)) {
             gs->curmove = pushMove(gs, gs->curpiece, from + currentMove, roll);
+            gs->curmove->band = true;
             gs->curmove->from = from;
             gs->mvs.mvc = 1;
-            gs->mvs.avalmvs[gs->curpiece].mpc += 1;
-            listPush(gs->mvs.avalmvs[gs->curpiece].mvs, gs->curmove);
         }
     }
 }

@@ -26,6 +26,7 @@ void transitionDiceRoll(GameState *gameState, Board *board) {
 }
 
 void useDice(GameState *gs) {
+    if (gs->curmove == NULL) return;
     ListNode *node = gs->curmove->dices->root;
     while (node != NULL) {
         Roll *roll = node->data;
@@ -37,7 +38,7 @@ void useDice(GameState *gs) {
 
 void transitionMove(GameState *gameState, Board *board) {
     if (gameState->mvs.mvc > 0) {
-        start_history_entry(&gameState->history, board, GMFRMPIC(gameState), gameState->dice);
+        start_history_entry(&gameState->history, gameState->player, board, GMFRMPIC(gameState), gameState->dice);
         movePiece(board, gameState->player,
                   GMFRMPIC(gameState));
         useDice(gameState);
@@ -99,8 +100,11 @@ GameState *gameStateInit() {
     gameState->player = 0;
     gameState->dice = malloc(sizeof(Dice));
     gameState->curpiece = -1;
+    gameState->curmove = NULL;
     gameState->update = false;
     gameState->history = initHistory();
     gameState->timestamp = time(NULL);
+    gameState->mvs.avalmvs = NULL;
+    gameState->mvs.mvc = 0;
     return gameState;
 }
