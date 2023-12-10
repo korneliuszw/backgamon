@@ -52,9 +52,9 @@ void moveSerializer(FILE *handle, Move *move) {
 
 void barsSerializer(FILE *handle, History *history) {
     for (int i = 0; i < PLAYERS; i++)
-        fprintf(handle, "%d %d", &history->prevBands[i].pieces, &history->prevBands[i].player);
+        fprintf(handle, "%d %d ", history->prevBands[i].pieces, history->prevBands[i].player);
     for (int i = 0; i < PLAYERS; i++)
-        fprintf(handle, "%d %d", &history->nextBands[i].pieces, &history->nextBands[i].player);
+        fprintf(handle, "%d %d ", history->nextBands[i].pieces, history->nextBands[i].player);
 }
 
 void pointSerializer(FILE *handle, History *cur) {
@@ -109,7 +109,7 @@ void startHistoryEntry(History **hst, int player, Board *brd, Move *mv, Dice *di
     new->player = player;
     copyHistoryDice(new, dice);
     memcpy(new->prevToPoint, brd->pts + mv->to, sizeof(BoardPoint));
-    memcpy(new->move, move, sizeof(Move));
+    memcpy(new->move, mv, sizeof(Move));
     memcpy(new->prevBands, brd->bars, sizeof(BoardPoint) * 2);
     *hst = new;
 }
