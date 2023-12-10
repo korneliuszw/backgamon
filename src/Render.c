@@ -174,7 +174,7 @@ void drwpl(Ctx *ctx) {
 void drwdval(Ctx *ctx, int it) {
     if (!ctx->gs->dice->rolls[it].enabled) return;
     wprintw(ctx->wsinf->handle, "%d ",
-            ctx->gs->dice->rolls[it]);
+            ctx->gs->dice->rolls[it].roll);
 }
 
 // draw move and dice status
@@ -184,10 +184,7 @@ void drwd(Ctx *ctx) {
     drwpl(ctx);
     if (ctx->gs->state > DICE) {
         for (int i = 0; i < ctx->gs->dice->rollsCount; i++) {
-            USE_COLOR(i == ctx->gs->dice->currentRoll, CPRPS,
-                      ctx->wsinf->handle) {
-                    drwdval(ctx, i);
-                }
+            drwdval(ctx, i);
         }
     }
     wrefresh(ctx->wsinf->handle);
