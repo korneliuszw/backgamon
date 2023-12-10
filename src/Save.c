@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ModalList.h>
+#include <Leaderboard.h>
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -91,11 +92,39 @@ void diceSerializer(FILE *file, Dice *dice) {
     }
 }
 
+void playerInfoSerializer(FILE *file, PlayerInfo *playerInfo) {
+    for (int i = 0; i < PLAYERS; i++) {
+        fprintf(file, "PLAYERINFO: %d ", i);
+        if (playerInfo[i].name != NULL) {
+            fprintf(file, "T %s\n", playerInfo[i].name);
+        } else {
+            fprintf(file, "N ");
+        }
+        fprintf(file, "%d\n", playerInfo[i].score);
+    }
+}
+
+void playerInfoDeserializer(FILE *file, PlayerInfo *playerInfo) {
+    for (int i = 0; i < PLAYERS; i++) {
+        fscanf(file, "PLAYERINFO: %d ", &i);
+        char has;
+        fscanf(file, "%c ", &has);
+        if (has == 'T') {
+            playerInfo[i].name = malloc(sizeof(char) * 100);
+            fscanf(file, "%[^\n]s ", playerInfo[i].name);
+        } else {
+            playerInfo[i].name = NULL;
+        }
+        fscanf(file, "%d\n", &playerInfo[i].score);
+    }
+}
+
 void stateSerializer(FILE *file, GameState *gameState) {
     fprintf(file, "STATE: %s\n", stateEnumStringifier(gameState->state));
     fprintf(file, "PLAYER: %d\n", gameState->player);
     fprintf(file, "TIMESTAMP: %ld\n", gameState->timestamp);
     diceSerializer(file, gameState->dice);
+    playerInfoSerializer(file, gameState->playerInfo);
 }
 
 void createFolder(char *folder) {
@@ -113,6 +142,7 @@ void saveGame(Ctx *ctx) {
     FILE *file = fopen(filename, "w");
     boardSerializer(file, ctx->b);
     stateSerializer(file, ctx->gs);
+    fclose(file);
 }
 
 void boardDeserializer(FILE *file, Board *board) {
@@ -152,6 +182,7 @@ void stateDeserializer(FILE *file, GameState *gameState) {
     fscanf(file, "PLAYER: %d\n", &gameState->player);
     fscanf(file, "TIMESTAMP: %ld\n", &gameState->timestamp);
     diceDeserializer(file, gameState->dice);
+    playerInfoDeserializer(file, gameState->playerInfo);
 }
 
 void loadGame(Ctx *ctx, char *filename) {
@@ -163,6 +194,7 @@ void loadGame(Ctx *ctx, char *filename) {
     boardDeserializer(file, ctx->b);
     stateDeserializer(file, ctx->gs);
     loadHistory(&ctx->gs->history);
+    fclose(file);
     transitionState(ctx->gs, ctx->b);
 }
 
