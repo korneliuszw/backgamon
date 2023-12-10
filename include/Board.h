@@ -42,7 +42,7 @@ Roll *rollDice(int *moves);
 
 bool movePiece(Board *board, int player, Move *mv);
 
-void movePieceOut(Board *board, int player);
+void movePieceOut(Board *board, int player, Move *mv);
 
 bool canMovePiece(Board *board, int player, int from, int to);
 

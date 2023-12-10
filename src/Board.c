@@ -66,7 +66,8 @@ bool canMovePiece(Board *board, int player, int from, int to) {
     return canMoveToDestination(board, player, to);
 }
 
-void movePieceOut(Board *board, int player) {
+void movePieceOut(Board *board, int player, Move *mv) {
+    board->pts[mv->from].pieces = MAX(0, board->pts[mv->from].pieces - 1));
     if (board->rempic[player - 1] == 1) {
         winner(board, player);
     } else board->rempic[player - 1]--;
@@ -79,7 +80,10 @@ void movePieceOutOfBand(Board *board, int player, Move *mv) {
 }
 
 bool movePiece(Board *board, int player, Move *mv) {
-    if (mv->to == (player == PR ? BOARD_POINTS : -1)) movePieceOut(board, player);
+    if (mv->to == (player == PR ? -1 : BOARD_POINTS)) {
+        movePieceOut(board, player, mv);
+        return true;
+    }
     if (IS_BAND_MOVE(board, player)) movePieceOutOfBand(board, player, mv);
     else board->pts[mv->from].pieces = MAX(0, board->pts[mv->from].pieces - 1));
     if (board->pts[mv->to].player != player && board->pts[mv->to].player > 0) {
@@ -92,9 +96,18 @@ bool movePiece(Board *board, int player, Move *mv) {
     return true;
 }
 
+int calculateWinPoints(Board *board) {
+    int otherPlayer = board->winner == PR ? PW : PR;
+    int points = 1;
+    if (!areAllPiecesHome(board, otherPlayer)) points = 2;
+    if (board->bars[otherPlayer - 1].pieces > 0) points = 3;
+    return points;
+}
+
 
 void winner(Board *board, int player) {
     board->winner = player;
+    calculateWinPoints(board);
 }
 
 void seedPoint(Board *board, int player, int point, int pieces) {

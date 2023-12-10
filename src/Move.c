@@ -60,11 +60,26 @@ Move *pushMove(GameState *gs, int from, int to, Roll *roll) {
     return move;
 }
 
+bool isLastInHome(Board *brd, int player, int piece) {
+    for (int i = 0; i < BOARD_POINTS; i++) {
+        if (brd->pts[i].player == player && brd->pts[i].pieces > 0) {
+            if ((player == PR && i > piece) || (player == PW && i < piece))
+                return false;
+        }
+    }
+    return true;
+}
 
 void getMoveForDice(GameState *gs, Board *brd, int from, Roll *roll) {
     if (!roll->enabled) return;
     if (canMovePiece(brd, gs->player, from, from + MOVE_STEP(gs->player) * roll->roll)) {
         pushMove(gs, from, from + MOVE_STEP(gs->player) * roll->roll, roll);
+    } else if (areAllPiecesHome(brd, gs->player)) {
+        if (gs->player == PR && roll->roll > from && isLastInHome(brd, gs->player, from)) {
+            pushMove(gs, from, -1, roll);
+        } else if (gs->player == PW && BOARD_POINTS - roll->roll < from && isLastInHome(brd, gs->player, from)) {
+            pushMove(gs, from, BOARD_POINTS, roll);
+        }
     }
 }
 
