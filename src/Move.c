@@ -119,7 +119,7 @@ List *filterAttacks(GameState *gs, Board *brd) {
         ListNode *next = GET_ROOT(gs->mvs.avalmvs[i].mvs);
         while (next != NULL) {
             Move *mv = next->data;
-            if (brd->pts[mv->to].player != gs->player && brd->pts[mv->to].player > 0) listPush(attack, next->data);
+            if (brd->pts[mv->from].player != gs->player && brd->pts[mv->to].player > 0) listPush(attack, next->data);
             next = next->next;
         }
     }
